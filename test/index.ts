@@ -1,19 +1,43 @@
-// import { expect } from "chai";
-// import { ethers } from "hardhat";
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
-// describe("Greeter", function () {
-//   it("Should return the new greeting once it's changed", async function () {
-//     const Greeter = await ethers.getContractFactory("Greeter");
-//     const greeter = await Greeter.deploy("Hello, world!");
-//     await greeter.deployed();
+// import { Idoru } from "../typechain/index.ts";
+import { Idoru } from "../types";
 
-//     expect(await greeter.greet()).to.equal("Hello, world!");
+describe("Token", function () {
+  let token: any;
 
-//     const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
+  beforeEach(async function () {
+    const Token = await ethers.getContractFactory("Idoru");
+    const token = await Token.deploy();
+    await token.deployed();
+  });
 
-//     // wait until the transaction is mined
-//     await setGreetingTx.wait();
+  it("Should make supply and manipulate it", async function () {
+    // const [owner, addr1] = await ethers.getSigners();
+    const [addr1] = await ethers.getSigners();
 
-//     expect(await greeter.greet()).to.equal("Hola, mundo!");
-//   });
-// });
+    expect(await token.name()).to.equal("Idoru");
+    expect(await token.symbol()).to.equal("IDRU");
+    expect(await token.decimals()).to.equal(18);
+
+    await token.transfer(addr1.address, 100);
+
+    // transfer tokens somewhere else, reounce ownership and try mint again
+    await token.transfer(addr1.address, 100);
+    await token.renounceOwnership();
+    await expect(token.mint(addr1.address, 100)).to.be.reverted;
+  });
+
+  it.only("Should mint tokens", async function () {
+    const Token = await ethers.getContractFactory("Idoru");
+    const token = await Token.deploy();
+    await token.deployed();
+
+    const [addr1] = await ethers.getSigners();
+
+    await token.mint(addr1.address, 100);
+
+    expect(await token.balanceOf(addr1.address)).to.equal(100);
+  });
+});

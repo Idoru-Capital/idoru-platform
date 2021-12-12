@@ -7,6 +7,11 @@
     "outDir": "dist",
     "declaration": true
   },
-  "include": ["./scripts", "./test", "./typechain"],
+  "baseUrl": "./",
+  "paths": {
+    "@types/*": ["types/*"]
+  },
+
+  "include": ["./scripts", "./test", "./types"],
   "files": ["./hardhat.config.ts"]
 }
