@@ -1,19 +1,24 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-// import { Idoru } from "../typechain/index.ts";
-import { Idoru } from "../types";
+// import { Idoru } from "../typechain/index";
+import { Idoru, Idoru__factory } from "../typechain";
 
-describe("Token", function () {
-  let token: any;
+describe("Idoru token", function () {
+  let token: Idoru;
+  let owner: SignerWithAddress;
+  let addr1: SignerWithAddress;
 
   beforeEach(async function () {
-    const Token = await ethers.getContractFactory("Idoru");
-    const token = await Token.deploy();
+    [owner, addr1] = await ethers.getSigners();
+
+    const tokenFactory = new Idoru__factory(owner);
+    token = await tokenFactory.deploy();
     await token.deployed();
   });
 
-  it("Should make supply and manipulate it", async function () {
+  it.only("Should make supply and manipulate it", async function () {
     // const [owner, addr1] = await ethers.getSigners();
     const [addr1] = await ethers.getSigners();
 
@@ -29,13 +34,7 @@ describe("Token", function () {
     await expect(token.mint(addr1.address, 100)).to.be.reverted;
   });
 
-  it.only("Should mint tokens", async function () {
-    const Token = await ethers.getContractFactory("Idoru");
-    const token = await Token.deploy();
-    await token.deployed();
-
-    const [addr1] = await ethers.getSigners();
-
+  it("Should mint tokens", async function () {
     await token.mint(addr1.address, 100);
 
     expect(await token.balanceOf(addr1.address)).to.equal(100);

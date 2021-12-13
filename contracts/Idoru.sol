@@ -32,6 +32,10 @@ contract Idoru is
     _mint(to, amount);
   }
 
+  function bla(uint256 amount) public onlyOwner {
+    _burn(msg.sender, amount);
+  }
+
   function _beforeTokenTransfer(
     address from,
     address to,
