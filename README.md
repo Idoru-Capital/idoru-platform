@@ -2,6 +2,10 @@
 
 Repo with docs available at https://handsomely-mango-150.notion.site/Token-Specs-a6328e8b18be43c9b99b58133f1f2196.
 
+## Todo
+
+- implement contract (class) for tracking users balances -> make some algorithm to track if he can sell.
+
 # Init with Hardhat typescript template
 
 This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
