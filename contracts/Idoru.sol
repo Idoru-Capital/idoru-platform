@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "./Buybacks.sol";
 
 contract Idoru is
   ERC20,
@@ -14,7 +15,8 @@ contract Idoru is
   Pausable,
   Ownable,
   ERC20Permit,
-  ERC20Votes
+  ERC20Votes,
+  ERC20Buybacks
 {
   constructor() ERC20("Idoru", "IDRU") ERC20Permit("Idoru") {
     _mint(msg.sender, 25000000 * 10**decimals());
@@ -50,7 +52,7 @@ contract Idoru is
     address from,
     address to,
     uint256 amount
-  ) internal override(ERC20, ERC20Votes) {
+  ) internal override(ERC20, ERC20Votes, ERC20Buybacks) {
     super._afterTokenTransfer(from, to, amount);
   }
 
