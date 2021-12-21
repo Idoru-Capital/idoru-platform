@@ -3,12 +3,19 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 // import { Idoru } from "../typechain/index";
-import { Idoru, Idoru__factory } from "../typechain";
+import {
+  Idoru,
+  Idoru__factory,
+  RoleNames,
+  RoleNames__factory,
+} from "../typechain";
 
 describe("Idoru token", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
+
+  let ROLES_NAMES: RoleNames;
 
   beforeEach(async function () {
     [owner, addr1] = await ethers.getSigners();
@@ -16,9 +23,13 @@ describe("Idoru token", function () {
     const tokenFactory = new Idoru__factory(owner);
     token = await tokenFactory.deploy();
     await token.deployed();
+
+    const constantsFactory = new RoleNames__factory(owner);
+    ROLES_NAMES = await constantsFactory.deploy();
+    await ROLES_NAMES.deployed();
   });
 
-  it.only("Should make supply and manipulate it", async function () {
+  it("Should make supply and manipulate it", async function () {
     // const [owner, addr1] = await ethers.getSigners();
     const [addr1] = await ethers.getSigners();
 
@@ -30,13 +41,48 @@ describe("Idoru token", function () {
 
     // transfer tokens somewhere else, reounce ownership and try mint again
     await token.transfer(addr1.address, 100);
-    await token.renounceOwnership();
+    await token.renounceRole(await ROLES_NAMES.MINTER(), owner.address);
     await expect(token.mint(addr1.address, 100)).to.be.reverted;
   });
 
-  it("Should mint tokens", async function () {
-    await token.mint(addr1.address, 100);
+  it("Should whitelist", async function () {
+    //! Default owner gets all the roles
+    // const wizard = await ROLES_NAMES.WIZARD();
+    // console.log(wizard);
+    // await token.grantRole(wizard, owner.address);
 
-    expect(await token.balanceOf(addr1.address)).to.equal(100);
+    expect(await token.isVerified(addr1.address)).to.be.false;
+
+    await token.verifyAddress(addr1.address);
+
+    expect(await token.isVerified(addr1.address)).to.be.true;
+  });
+
+  it.only("Balance tracker", async function () {
+    // Don't have to deal with approving
+    const tokenFactory = new Idoru__factory(addr1);
+    const token_addr = await tokenFactory.deploy();
+    await token_addr.deployed();
+
+    await token.transfer(addr1.address, 1000);
+
+    await token.delegate(owner.address);
+    await token_addr.delegate(addr1.address);
+
+    // for (let index = 0; index < 5; index++) {
+    //   await token.transfer(addr1.address, 1000);
+    // }
+
+    console.log(await token_addr.transfer(owner.address, 100));
+    // console.log(await token.balanceOf(addr1.address));
+
+    // console.log(await token.getCheckPoints(owner.address));
+    // // console.log(await token.getCheckPoints(ethers.constants.AddressZero));
+    // console.log(await token.getCheckPoints(addr1.address));
+
+    // console.log(await token.numCheckpoints(owner.address));
+    console.log(await token.numCheckpoints(addr1.address));
+    console.log(await token.allCheckpoints(addr1.address));
+    // console.log(await token.numCheckpoints(addr1.address));
   });
 });
