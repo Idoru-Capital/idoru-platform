@@ -60,20 +60,35 @@ describe("Idoru token", function () {
 
   it.only("Balance tracker", async function () {
     // Don't have to deal with approving
-    const tokenFactory = new Idoru__factory(addr1);
-    const token_addr = await tokenFactory.deploy();
-    await token_addr.deployed();
 
-    await token.transfer(addr1.address, 1000);
+    const initial_balance = await token.balanceOf(owner.address);
 
+    await token.transfer(addr1.address, 1);
+
+    await token.changeMinHoldingBlocks(50);
+
+    expect(
+      token.hasEnoughBuyingPower(owner.address, initial_balance.div(2))
+    ).to.be.revertedWith("no checkpoints");
+
+    // expect(await token.hasEnoughBuyingPower(owner.address));
+
+    //! have to self delegate
     await token.delegate(owner.address);
-    await token_addr.delegate(addr1.address);
 
-    // for (let index = 0; index < 5; index++) {
-    //   await token.transfer(addr1.address, 1000);
+    console.log(
+      await token.hasEnoughBuyingPower(owner.address, initial_balance.div(2))
+    );
+
+    expect(token.hasEnoughBuyingPower(owner.address, initial_balance.div(2))).to
+      .be.true;
+
+    // const N = 100;
+    // for (let index = 0; index < N; index++) {
+    //   await token.transfer(addr1.address, 10_000);
     // }
 
-    console.log(await token_addr.transfer(owner.address, 100));
+    // await token_addr.transfer(owner.address, 100);
     // console.log(await token.balanceOf(addr1.address));
 
     // console.log(await token.getCheckPoints(owner.address));

@@ -1,8 +1,9 @@
 {
+  "license": "UNLICENSED",
   "name": "hardhat-project",
   "scripts": {
-    "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "compile": "hardhat compile",
+    "test": "hardhat test"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.3",
