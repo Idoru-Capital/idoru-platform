@@ -43,26 +43,26 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     uint256 minimum = checkpoints(_addr, numCheckpoints(_addr) - 1).votes;
     // console.log(minimum);
 
-    console.log(uint256(block.number) - minHoldingBlocks);
+    // console.log(int256(block.number) - int256(minHoldingBlocks));
 
-    // uint256 startBlock = block.number - minHoldingBlocks > 0
-    //   ? block.number - minHoldingBlocks
-    //   : 0;
+    uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
+      ? block.number - minHoldingBlocks
+      : 0;
 
     // console.log(startBlock);
     // console.log(checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock);
 
-    // if (checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock <= startBlock) {
-    //   return minimum;
-    // }
+    if (checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock <= startBlock) {
+      return minimum;
+    }
 
-    // for (
-    //   uint32 i = uint32(getPastVotes(_addr, block.number - minHoldingBlocks));
-    //   i < numCheckpoints(_addr);
-    //   i++
-    // ) {
-    //   minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
-    // }
+    for (
+      uint32 i = uint32(getPastVotes(_addr, startBlock));
+      i < numCheckpoints(_addr);
+      i++
+    ) {
+      minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
+    }
 
     return minimum;
   }

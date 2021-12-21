@@ -60,6 +60,7 @@ describe("Idoru token", function () {
 
   it.only("Balance tracker", async function () {
     // Don't have to deal with approving
+    const token_addr1 = token.connect(addr1);
 
     const initial_balance = await token.balanceOf(owner.address);
 
@@ -75,18 +76,35 @@ describe("Idoru token", function () {
 
     //! have to self delegate
     await token.delegate(owner.address);
+    await token_addr1.delegate(addr1.address);
 
-    console.log(
+    expect(
       await token.hasEnoughBuyingPower(owner.address, initial_balance.div(2))
-    );
+    ).to.be.true;
 
-    // expect(token.hasEnoughBuyingPower(owner.address, initial_balance.div(2))).to
-    //   .be.true;
+    expect(
+      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(2))
+    ).to.be.false;
 
-    // const N = 100;
-    // for (let index = 0; index < N; index++) {
-    //   await token.transfer(addr1.address, 10_000);
-    // }
+    const N = 100;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr1.address, initial_balance.div(N).div(2));
+    }
+
+    expect(
+      await token.hasEnoughBuyingPower(
+        owner.address,
+        initial_balance.mul(10).div(15)
+      )
+    ).to.be.false;
+
+    expect(
+      await token.hasEnoughBuyingPower(owner.address, initial_balance.div(3))
+    ).to.be.true;
+
+    expect(
+      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(2))
+    ).to.be.true;
 
     // await token_addr.transfer(owner.address, 100);
     // console.log(await token.balanceOf(addr1.address));
@@ -95,12 +113,14 @@ describe("Idoru token", function () {
     // // console.log(await token.getCheckPoints(ethers.constants.AddressZero));
     // console.log(await token.getCheckPoints(addr1.address));
 
+    console.log(await token.numCheckpoints(owner.address));
     // console.log(await token.numCheckpoints(owner.address));
-    console.log(await token.numCheckpoints(owner.address));
 
-    await token.delegate(ethers.constants.AddressZero);
-    // console.log(await token.numCheckpoints(addr1.address));
-    // console.log(await token.allCheckpoints(owner.address));
-    console.log(await token.numCheckpoints(owner.address));
+    // await token.delegate(ethers.constants.AddressZero);
+    // // console.log(await token.numCheckpoints(addr1.address));
+    // // console.log(await token.allCheckpoints(owner.address));
+    // console.log(await token.numCheckpoints(owner.address));
+
+    await token_addr1.transfer(owner.address, 10000);
   });
 });
