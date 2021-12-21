@@ -5,9 +5,12 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "./Constants.sol";
+
+import "hardhat/console.sol";
 
 /**
  * will be adding to default implementation a little
@@ -16,9 +19,11 @@ import "./Constants.sol";
  */
 
 abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
-  uint32 public minHoldingBlocks = 100_000;
+  using SafeMath for uint256;
 
-  function changeMinHoldingBlocks(uint32 _minHoldingBlocks)
+  uint256 public minHoldingBlocks = 100_000;
+
+  function changeMinHoldingBlocks(uint256 _minHoldingBlocks)
     public
     onlyRole(RoleNames.WIZARD)
   {
@@ -30,25 +35,34 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
 
    * what we do is just check minimum in last `minHoldingBlocks` blocks
    */
-  function minHolding(address _addr) private view returns (uint224) {
+  function minHolding(address _addr) private view returns (uint256) {
     require(numCheckpoints(_addr) > 0, "no checkpoints");
 
-    uint224 minimum = checkpoints(_addr, numCheckpoints(_addr) - 1).votes;
+    console.log(numCheckpoints(_addr) - 1);
 
-    if (
-      checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock <=
-      block.number - minHoldingBlocks
-    ) {
-      return minimum;
-    }
+    uint256 minimum = checkpoints(_addr, numCheckpoints(_addr) - 1).votes;
+    // console.log(minimum);
 
-    for (
-      uint32 i = uint32(getPastVotes(_addr, block.number - minHoldingBlocks));
-      i < numCheckpoints(_addr);
-      i++
-    ) {
-      minimum = uint224(Math.min(minimum, checkpoints(_addr, i).votes));
-    }
+    console.log(uint256(block.number) - minHoldingBlocks);
+
+    // uint256 startBlock = block.number - minHoldingBlocks > 0
+    //   ? block.number - minHoldingBlocks
+    //   : 0;
+
+    // console.log(startBlock);
+    // console.log(checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock);
+
+    // if (checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock <= startBlock) {
+    //   return minimum;
+    // }
+
+    // for (
+    //   uint32 i = uint32(getPastVotes(_addr, block.number - minHoldingBlocks));
+    //   i < numCheckpoints(_addr);
+    //   i++
+    // ) {
+    //   minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
+    // }
 
     return minimum;
   }
