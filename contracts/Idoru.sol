@@ -8,19 +8,16 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 // import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-import "./Balances.sol";
 import "./Verifiable.sol";
 import "./Constants.sol";
-import "./ModifiedVotes.sol";
+import "./ERC20CVotes.sol";
 
 contract Idoru is
   ERC20,
   ERC20Burnable,
   Pausable,
-  AccessControl,
   ERC20Permit,
-  ERC20Votes,
-  ERC20Balances,
+  ERC20CVotes,
   ERC20Verifiable
 {
   constructor() ERC20("Idoru", "IDRU") ERC20Permit("Idoru") {
@@ -57,20 +54,20 @@ contract Idoru is
     address from,
     address to,
     uint256 amount
-  ) internal override(ERC20, ERC20Votes, ERC20Balances) {
+  ) internal override(ERC20, ERC20CVotes) {
     super._afterTokenTransfer(from, to, amount);
   }
 
   function _mint(address to, uint256 amount)
     internal
-    override(ERC20, ERC20Votes)
+    override(ERC20, ERC20CVotes)
   {
     super._mint(to, amount);
   }
 
   function _burn(address account, uint256 amount)
     internal
-    override(ERC20, ERC20Votes)
+    override(ERC20, ERC20CVotes)
   {
     super._burn(account, amount);
   }

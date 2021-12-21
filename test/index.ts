@@ -81,8 +81,11 @@ describe("Idoru token", function () {
     // console.log(await token.getCheckPoints(addr1.address));
 
     // console.log(await token.numCheckpoints(owner.address));
-    console.log(await token.numCheckpoints(addr1.address));
-    console.log(await token.allCheckpoints(addr1.address));
+    console.log(await token.numCheckpoints(owner.address));
+
+    await token.delegate(ethers.constants.AddressZero);
     // console.log(await token.numCheckpoints(addr1.address));
+    // console.log(await token.allCheckpoints(owner.address));
+    console.log(await token.numCheckpoints(owner.address));
   });
 });
