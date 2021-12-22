@@ -20,7 +20,7 @@ import "hardhat/console.sol";
 abstract contract ERC20Verifiable is AccessControl {
   mapping(address => bool) public verified;
 
-  function verifyAddress(address _addr) public onlyRole(RoleNames.WIZARD) {
+  function verifyAddress(address _addr) public onlyRole(RoleNames.WIZARD){
     require(!verified[_addr], "Already verifieded");
     verified[_addr] = true;
   }

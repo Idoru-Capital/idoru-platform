@@ -27,45 +27,12 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     public
     onlyRole(RoleNames.WIZARD)
   {
+    require(_minHoldingBlocks > 0, "negative minHoldingBlocks");
     minHoldingBlocks = _minHoldingBlocks;
   }
 
-  /**
-   * loop all checkpoints and check if user has held the enought token for long enough
-
-   * what we do is just check minimum in last `minHoldingBlocks` blocks
-   */
-  function minHolding(address _addr) private view returns (uint256) {
-    require(numCheckpoints(_addr) > 0, "no checkpoints");
-
-    console.log(numCheckpoints(_addr) - 1);
-
-    uint256 minimum = checkpoints(_addr, numCheckpoints(_addr) - 1).votes;
-    // console.log(minimum);
-
-    // console.log(int256(block.number) - int256(minHoldingBlocks));
-
-    uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
-      ? block.number - minHoldingBlocks
-      : 0;
-
-    // console.log(startBlock);
-    // console.log(checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock);
-
-    if (checkpoints(_addr, numCheckpoints(_addr) - 1).fromBlock <= startBlock) {
-      return minimum;
-    }
-
-    for (
-      uint32 i = uint32(getPastVotes(_addr, startBlock));
-      i < numCheckpoints(_addr);
-      i++
-    ) {
-      minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
-    }
-
-    return minimum;
-  }
+ 
+  
 
   /**
    * confirm if user has enough buying power
@@ -75,10 +42,25 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     view
     returns (bool)
   {
-    // require(minHolding(_addr) >= _amount, "did not hold enough");
-    if (minHolding(_addr) < _amount) {
-      return false;
+  require(numCheckpoints(_addr) > 0, "no checkpoints");
+
+    uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
+      ? block.number - minHoldingBlocks
+      : 0;
+
+    require(getPastVotes(_addr, startBlock) > _amount, "no checkpoints");
+
+
+   for (
+      uint32 i = numCheckpoints(_addr);
+      i > startBlock;
+      i--
+    ) {
+      require(checkpoints(_addr, i-1).votes > _amount, "Votes not enough");
+      //minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
+      
     }
+
     return true;
   }
 
