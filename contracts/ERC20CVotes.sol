@@ -48,7 +48,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
       ? block.number - minHoldingBlocks
       : 0;
 
-    require(getPastVotes(_addr, startBlock) > _amount, "no checkpoints");
+    require(getPastVotes(_addr, startBlock) > _amount, "Votes not enough"); // what error msg do we want here?
 
 
    for (

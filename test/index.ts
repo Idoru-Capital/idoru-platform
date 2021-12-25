@@ -20,7 +20,7 @@ describe("Idoru token", function () {
   let ROLES_NAMES: RoleNames;
 
   beforeEach(async function () {
-    [owner, addr1, addr2] = await ethers.getSigners();
+    [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
     const tokenFactory = new Idoru__factory(owner);
     token = await tokenFactory.deploy();
@@ -65,37 +65,6 @@ describe("Idoru token", function () {
     const token_addr1 = token.connect(addr1);
     // await token_addr1.verifyAddress(addr1.address);
     await token_addr1.unVerifyAddress(addr1.address);
-  });
-
-  it.only("Balance tracker 2", async function () {
-    const token_addr1 = token.connect(addr1);
-    const token_addr2 = token.connect(addr2);
-    const initial_balance = await token.balanceOf(owner.address);
-    // const token_addr3 = token.connect(addr3);
-    await token.changeMinHoldingBlocks(50);
-    await token_addr1.delegate(addr1.address);
-    await token.transfer(addr1.address, 100);
-
-    let N = 100;
-    for (let index = 0; index < N; index++) {
-      await token.transfer(addr2.address, initial_balance.div(N).div(50));
-    }
-    
-    
-    console.log(await token.minHoldingBlocks())
-    await token.transfer(addr1.address, 50);
-    //await token_addr1.transfer(addr1.address, initial_balance.div(6));
-    // expect(
-    //   await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(2))
-    // ).to.be.false;
-    //await token.delegate(owner.address);
-    
-    //await token_addr2.delegate(addr2.address);
-
-
-    expect(
-      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
-    ).to.be.true;
   });
 
   it("Balance tracker", async function () {
@@ -172,4 +141,140 @@ describe("Idoru token", function () {
     //await token_addr1.transfer(owner.address, 10000);
   });
   
+  it("Balance tracker, delegate before or right after", async function () {
+    // delegate before, delegate right after tx
+    const token_addr1 = token.connect(addr1);
+    const token_addr2 = token.connect(addr2);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+
+    // initial neutral blocks
+    let M = 20;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr3.address, initial_balance.div(M).div(50));
+    }
+
+    await token_addr1.delegate(addr1.address);
+    await token.transfer(addr1.address, initial_balance.div(5));
+    await token.transfer(addr2.address, initial_balance.div(5));
+    await token_addr2.delegate(addr2.address);  // delegate after tx
+
+    let N = 10;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr3.address, initial_balance.div(N).div(50));
+    }
+    expect(
+      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
+    ).to.be.true;
+
+    expect(
+      await token.hasEnoughBuyingPower(addr2.address, initial_balance.div(10))
+    ).to.be.true;  // delegated right after is ok
+  });
+
+  it("Balance tracker, delegate after some time", async function () {
+    // delegate after some time
+    const token_addr1 = token.connect(addr1);
+    const token_addr2 = token.connect(addr2);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+
+    // initial neutral blocks
+    let M = 20;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr3.address, initial_balance.div(M).div(50));
+    }
+
+    await token.transfer(addr1.address, initial_balance.div(5));  
+    await token.transfer(addr2.address, initial_balance.div(5));
+    
+    // neutral blocks
+    let j = 10;
+    for (let index = 0; index < j; index++) {
+      await token.transfer(addr3.address, initial_balance.div(j).div(50));
+    }
+    await token_addr1.delegate(addr1.address);  // delegate after some blocks. Delegation trigger checkpoint
+
+    await token_addr2.delegate(addr2.address);  // delegate after some blocks but then send "blank" tx
+    await token.transfer(addr2.address, 5); // blank tx to trigger checkpoint. -> no need or change in outcome
+
+    // neutral blocks
+    let N = 10;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr3.address, initial_balance.div(N).div(50));
+    }
+
+    expect(
+      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
+    ).to.be.true;
+
+    expect(
+      await token.hasEnoughBuyingPower(addr2.address, initial_balance.div(10))
+    ).to.be.true;
+  });
+
+  it("Balance tracker. Enough balance too late to delegate", async function () {
+    // Cases without delegation or too late delegation
+
+    const token_addr1 = token.connect(addr1);
+    const token_addr2 = token.connect(addr2);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+
+    // initial neutral blocks
+    let M = 20;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    }
+
+    
+    await token.transfer(addr1.address, initial_balance.div(5));
+    await token.transfer(addr2.address, initial_balance.div(5));
+    // initial neutral blocks
+    let N = 20;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr2.address, initial_balance.div(N).div(50));
+    }
+
+    await token_addr1.delegate(addr1.address); // too late delegation
+    expect(
+      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
+    ).to.be.false;
+    expect(
+      await token.hasEnoughBuyingPower(addr2.address, initial_balance.div(10))
+    ).to.be.false;  // no delegation, "votes not enough"
+  });
+
+  it.only("Balance tracker. Changing different MinHoldingBlocks", async function () {
+    // Cases without delegation or too late delegation
+
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(30);
+    await token_addr1.delegate(addr1.address);
+
+    // initial neutral blocks
+    let M = 20;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    }
+
+    await token.transfer(addr1.address, initial_balance.div(5));
+
+    // initial neutral blocks
+    let N = 10;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr2.address, initial_balance.div(N).div(50));
+    }
+    // expect(
+    //   await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
+    // ).to.be.false;  // not enough blocks between "votes not enough"
+
+    await token.changeMinHoldingBlocks(5);
+
+    expect(
+      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
+    ).to.be.true;
+  });
+
 });
