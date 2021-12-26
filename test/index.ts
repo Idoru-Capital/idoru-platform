@@ -52,11 +52,11 @@ describe("Idoru token", function () {
     // const wizard = await ROLES_NAMES.WIZARD();
     // console.log(wizard);
     // await token.grantRole(wizard, owner.address);
-    
+
     expect(await token.isVerified(addr1.address)).to.be.false;
     expect(await token.isVerified(owner.address)).to.be.false;
     await token.verifyAddress(addr1.address);
-    await token.verifyAddress(owner.address); 
+    await token.verifyAddress(owner.address);
     expect(await token.isVerified(addr1.address)).to.be.true;
     expect(await token.isVerified(owner.address)).to.be.true;
     await token.unVerifyAddress(addr1.address);
@@ -80,18 +80,16 @@ describe("Idoru token", function () {
     for (let index = 0; index < N; index++) {
       await token.transfer(addr2.address, initial_balance.div(N).div(50));
     }
-    
-    
-    console.log(await token.minHoldingBlocks())
+
+    console.log(await token.minHoldingBlocks());
     await token.transfer(addr1.address, 50);
     //await token_addr1.transfer(addr1.address, initial_balance.div(6));
     // expect(
     //   await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(2))
     // ).to.be.false;
     //await token.delegate(owner.address);
-    
-    //await token_addr2.delegate(addr2.address);
 
+    //await token_addr2.delegate(addr2.address);
 
     expect(
       await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
@@ -99,7 +97,6 @@ describe("Idoru token", function () {
   });
 
   it("Balance tracker", async function () {
-
     // Don't have to deal with approving
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
@@ -109,7 +106,7 @@ describe("Idoru token", function () {
     await token_addr1.delegate(addr1.address);
 
     await token.changeMinHoldingBlocks(50);
-    console.log(await token.minHoldingBlocks())
+    console.log(await token.minHoldingBlocks());
     await token.transfer(addr1.address, initial_balance.div(4));
 
     // expect(await token.hasEnoughBuyingPower(owner.address));
@@ -119,7 +116,10 @@ describe("Idoru token", function () {
     ).to.be.true;
 
     expect(
-      await token.hasEnoughBuyingPower(owner.address, initial_balance.div(4).mul(3))
+      await token.hasEnoughBuyingPower(
+        owner.address,
+        initial_balance.div(4).mul(3)
+      )
     ).to.be.true;
 
     expect(
@@ -130,17 +130,13 @@ describe("Idoru token", function () {
       await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(4))
     ).to.be.true;
 
-
     const N = 100;
     for (let index = 0; index < N; index++) {
       await token.transfer(addr1.address, initial_balance.div(N).div(4));
     }
-    
+
     expect(
-      await token.hasEnoughBuyingPower(
-        owner.address,
-        initial_balance.div(2)
-      )
+      await token.hasEnoughBuyingPower(owner.address, initial_balance.div(2))
     ).to.be.true;
     expect(
       await token.hasEnoughBuyingPower(
@@ -155,7 +151,10 @@ describe("Idoru token", function () {
       await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(2))
     ).to.be.true;
     expect(
-      await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(3).mul(2))
+      await token.hasEnoughBuyingPower(
+        addr1.address,
+        initial_balance.div(3).mul(2)
+      )
     ).to.be.false;
 
     await token_addr1.transfer(owner.address, initial_balance.div(2));
@@ -164,12 +163,11 @@ describe("Idoru token", function () {
     ).to.be.false;
     // console.log(await token.balanceOf(addr1.address));
     // console.log(await token.getCheckPoints(addr1.address));
-    console.log("__")
+    console.log("__");
     console.log(await token.numCheckpoints(addr1.address));
     console.log(await token.numCheckpoints(owner.address));
     //console.log(await token.getCheckPoints(owner.address));
 
     //await token_addr1.transfer(owner.address, 10000);
   });
-  
 });

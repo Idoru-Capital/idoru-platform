@@ -20,7 +20,7 @@ contract Idoru is
   ERC20CVotes,
   ERC20Verifiable
 {
-  constructor() ERC20("Idoru", "IDRU") ERC20Permit("Idoru") {
+  constructor() ERC20("Idoru", "IDORU") ERC20Permit("Idoru") {
     // Let's just give owner all the roles
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(RoleNames.WIZARD, msg.sender);
