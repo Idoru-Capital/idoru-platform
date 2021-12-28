@@ -31,9 +31,6 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     minHoldingBlocks = _minHoldingBlocks;
   }
 
- 
-  
-
   /**
    * confirm if user has enough buying power
    */
@@ -42,7 +39,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     view
     returns (bool)
   {
-  require(numCheckpoints(_addr) > 0, "no checkpoints");
+    require(numCheckpoints(_addr) > 0, "no checkpoints");
 
     uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
       ? block.number - minHoldingBlocks
@@ -50,15 +47,9 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
 
     require(getPastVotes(_addr, startBlock) > _amount, "Votes not enough"); // what error msg do we want here?
 
-
-   for (
-      uint32 i = numCheckpoints(_addr);
-      i > startBlock;
-      i--
-    ) {
-      require(checkpoints(_addr, i-1).votes > _amount, "Votes not enough");
+    for (uint32 i = numCheckpoints(_addr); i > startBlock; i--) {
+      require(checkpoints(_addr, i - 1).votes > _amount, "Votes not enough");
       //minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
-      
     }
 
     return true;
