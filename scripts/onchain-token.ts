@@ -36,6 +36,8 @@ async function main() {
   // await token.delegate(deployer.address);
   console.log(await token.numCheckpoints(deployer.address));
 
+  console.log(await token.decimals());
+
   // await token.burnFrom(100);
 
   //   console.log("Token address:", token.address);
