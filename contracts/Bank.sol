@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-abstract contract ERC20Bank is Ownable {
-  mapping(address => bool) private bankUsers; // bankUsers[address] = true if user is a bank user
+contract ERC20Bank is Ownable {
+  mapping(address => bool) private bankUsers; // true if user is a bank user
 
   constructor() {
     addBankUser(msg.sender);
   }
 
-  function isBankUser(address _user) public view onlyOwner returns (bool) {
+  function isBankUser(address _user) public view returns (bool) {
     return bankUsers[_user];
   }
 
@@ -38,7 +38,7 @@ abstract contract ERC20Bank is Ownable {
   /**
    * Borrow ERC20 tokens from the bank
    */
-  function borrowTokens(address _token, uint256 _amount) public onlyBankUser {
+  function withdrawTokens(address _token, uint256 _amount) public onlyBankUser {
     require(_amount > 0, "Value must be greater than 0");
     // require(_to != address(0), "Invalid address");
 
