@@ -1,30 +1,43 @@
-// // We require the Hardhat Runtime Environment explicitly here. This is optional
-// // but useful for running the script in a standalone fashion through `node <script>`.
-// //
-// // When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// // Runtime Environment's members available in the global scope.
+// /**
+//  * Deploy the contracts
+//  */
 // import { ethers } from "hardhat";
+// import {
+//   Idoru,
+//   Idoru__factory,
+//   RoleNames,
+//   RoleNames__factory,
+// } from "../typechain";
+
+// // https://data-seed-prebsc-1-s1.binance.org:8545
 
 // async function main() {
-//   // Hardhat always runs the compile task when running scripts with its command
-//   // line interface.
-//   //
-//   // If this script is run directly using `node` you may want to call compile
-//   // manually to make sure everything is compiled
-//   // await hre.run('compile');
+//   const [deployer] = await ethers.getSigners();
 
-//   // We get the contract to deploy
-//   const Greeter = await ethers.getContractFactory("Greeter");
-//   const greeter = await Greeter.deploy("Hello, Hardhat!");
+//   //   console.log("Deploying contracts with the account:", deployer.address);
 
-//   await greeter.deployed();
+//   //   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-//   console.log("Greeter deployed to:", greeter.address);
+//   //   const tokenFactory = new Idoru__factory(deployer);
+//   //   const token = await tokenFactory.deploy();
+//   //   await token.deployed();
+
+//   //   const token = new Idoru("0xD48300A2FFD2a84334204DC43d91Ef60dA2d8349");
+
+//   //   console.log("Token address:", token.address);
+
+//   //   const uni = new ethers.Contract(
+//   //     UNISWAP,
+//   //     [
+//   //       "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
+//   //     ],
+//   //     wallet
+//   //   );
 // }
 
-// // We recommend this pattern to be able to use async/await everywhere
-// // and properly handle errors.
-// main().catch((error) => {
-//   console.error(error);
-//   process.exitCode = 1;
-// });
+// main()
+//   .then(() => process.exit(0))
+//   .catch((error) => {
+//     console.error(error);
+//     process.exit(1);
+//   });

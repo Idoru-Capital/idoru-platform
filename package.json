@@ -3,7 +3,9 @@
   "name": "hardhat-project",
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "deploy": "npx hardhat run scripts/deploy.ts --network bsctestnet",
+    "test:onchain": "hardhat run scripts/onchain-token.ts --network bsctestnet"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.3",
