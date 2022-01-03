@@ -276,7 +276,7 @@ describe.skip("Idoru token", function () {
     ).to.be.false; // no delegation, "votes not enough"
   });
 
-  it.only("Balance tracker. Changing different MinHoldingBlocks", async function () {
+  it("Balance tracker. Changing different MinHoldingBlocks", async function () {
     // Cases without delegation or too late delegation
 
     const token_addr1 = token.connect(addr1);
@@ -306,6 +306,30 @@ describe.skip("Idoru token", function () {
     expect(
       await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
     ).to.be.true;
+  });
+  it.only("minHoldingPower", async function () {
+    // Cases without delegation or too late delegation
+
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+    await token_addr1.delegate(addr1.address);
+
+    
+    // initial neutral blocks
+    const M = 20;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    }
+
+    await token.transfer(addr1.address, initial_balance.div(5));
+    // neutral blocks
+    const N = 20;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr2.address, initial_balance.div(N).div(50));
+    }
+
+    console.log(token.minHoldingValue(addr1.address));
   });
 });
 
