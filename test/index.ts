@@ -250,7 +250,7 @@ describe("Idoru token", function () {
 
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
-    await token.changeMinHoldingBlocks(30);
+    await token.changeMinHoldingBlocks(300);
     await token_addr1.delegate(addr1.address);
 
     // initial neutral blocks
@@ -270,7 +270,7 @@ describe("Idoru token", function () {
     //   await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
     // ).to.be.false;  // not enough blocks between "votes not enough"
 
-    await token.changeMinHoldingBlocks(5);
+    await token.changeMinHoldingBlocks(300);
 
     expect(
       await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
