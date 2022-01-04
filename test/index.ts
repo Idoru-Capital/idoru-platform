@@ -316,7 +316,6 @@ describe.skip("Idoru token", function () {
     await token.changeMinHoldingBlocks(10);
     await token_addr1.delegate(addr1.address);
 
-    
     // initial neutral blocks
     const M = 20;
     for (let index = 0; index < M; index++) {
@@ -378,9 +377,7 @@ describe.only("Bank", function () {
       await token.balanceOf(bankAddress)
     );
 
-    expect(bank_non_owner.isBankUser(addr1.address)).to.be.revertedWith(
-      "Ownable: caller is not the owner"
-    );
+    expect(await bank_non_owner.isBankUser(addr1.address)).to.be.false;
     expect(
       bank_non_owner.withdrawTokens(token.address, 5_000)
     ).to.be.revertedWith("Not a bank user");
