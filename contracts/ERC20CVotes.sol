@@ -21,7 +21,9 @@ import "hardhat/console.sol";
 abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   using SafeMath for uint256;
 
+  address[] public delegateAddresses;
   uint256 public minHoldingBlocks = 100_000;
+  uint256 constant internal   POINTSMULTIPLIER = 2**128;  // optimization, see https://github.com/ethereum/EIPs/issues/1726#issuecomment-472352728
 
   function changeMinHoldingBlocks(uint256 _minHoldingBlocks)
     public
@@ -29,6 +31,33 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   {
     require(_minHoldingBlocks > 0, "negative minHoldingBlocks");
     minHoldingBlocks = _minHoldingBlocks;
+  }
+
+  function subscribeDividends(address _addr) public virtual{
+    require(delegates(_addr) == address(0), "Already subscribed"); // check if already subscribed
+    delegateAddresses.push(_addr);
+    delegate(_addr);  // ?
+  }
+  
+
+  /**
+  * return how much dividend should one get per his minHoldingValue. EXagerated for factor POINTSMULTIPLIER!
+  *   In each distribution, there is a small amount of funds which does not get distributed,
+	*     which is `(msg.dividendAmount * POINTSMULTIPLIER) % totalValue()`.
+  */
+  function dividendsPerHoldingValue(uint256 dividendAmount) public view onlyRole(RoleNames.WIZARD) returns (uint256){
+    uint256 arrayLength = delegateAddresses.length;
+    uint256 totalHoldingPower = 0; // totalValue auto init to 0
+    uint256 pointsPerShare;
+
+    for (uint256 i=0; i<arrayLength; i++) {
+      totalHoldingPower += minHoldingValue(delegateAddresses[i]);
+      }
+    require(totalHoldingPower > 0, "TTOTAL HOLDING POWER IS ZERO");
+    require(dividendAmount > 0, "NO DIVIDENDS TO DISTRIBUTE");
+    
+    pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER) / totalHoldingPower;
+    return pointsPerShare;
   }
 
   /**
@@ -49,12 +78,14 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
 
     for (uint32 i = numCheckpoints(_addr); i > startBlock; i--) {
       require(checkpoints(_addr, i - 1).votes > _amount, "Votes not enough");
-      //minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
     }
 
     return true;
   }
 
+  /**
+   * Return min share of user in last minHoldingBlocks
+   */
   function minHoldingValue(address _addr)
     public
     view

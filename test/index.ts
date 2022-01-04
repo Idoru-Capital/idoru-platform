@@ -69,7 +69,7 @@ describe.skip("Idoru token", function () {
     await token_addr1.unVerifyAddress(addr1.address);
   });
 
-  it.only("Balance tracker 2", async function () {
+  it("Balance tracker 2", async function () {
     const token_addr1 = token.connect(addr1);
     // const token_addr2 = token.connect(addr2);
     const initial_balance = await token.balanceOf(owner.address);
@@ -307,6 +307,7 @@ describe.skip("Idoru token", function () {
       await token.hasEnoughBuyingPower(addr1.address, initial_balance.div(10))
     ).to.be.true;
   });
+
   it.only("minHoldingPower", async function () {
     // Cases without delegation or too late delegation
 
@@ -322,13 +323,12 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
 
-    await token.transfer(addr1.address, initial_balance.div(5));
+    await token.transfer(addr1.address, 50);
     // neutral blocks
     const N = 20;
     for (let index = 0; index < N; index++) {
       await token.transfer(addr2.address, initial_balance.div(N).div(50));
     }
-
     console.log(token.minHoldingValue(addr1.address));
   });
 });
