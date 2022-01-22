@@ -8,6 +8,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol";
 
+// Basically we dont need to connect to Uniswap because we will predefine the price
+// at which users can mint new token
+
 // TODO
 // add safemath
 
@@ -16,16 +19,38 @@ import "@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol";
 // alternatevly just getReserves() function on the from uniswap library
 
 abstract contract IdoruMinter is Ownable {
-  address private _idoruStablePair;
-  address private _idoruAddress;
-  address private _stablecoinAddress;
+  //   address private _idoruStablePair;
+  address private uniswapFactoryAddress;
+  address private idoruAddress;
+  address private stablecoinAddress;
+  address private bankAddress;
 
-  address private _bankAddress;
+  constructor(
+    address _uniswapFactory,
+    address _idoru,
+    address _stablecoin,
+    address _bank
+  ) public {
+    uniswapFactoryAddress = _uniswapFactory;
+    idoruAddress = _idoru;
+    stablecoinAddress = _stablecoin;
+    bankAddress = _bank;
+  }
 
-  //   constructor() {}
+  function setUniswapFactoryAddress(address _addr) public onlyOwner {
+    uniswapFactoryAddress = _addr;
+  }
 
-  function setIdoruStablePair(address _pairAddress) public onlyOwner {
-    _idoruStablePair = _pairAddress;
+  function setIdoruAddress(address _addr) public onlyOwner {
+    idoruAddress = _addr;
+  }
+
+  function setStablecoinAddress(address _addr) public onlyOwner {
+    stablecoinAddress = _addr;
+  }
+
+  function setBankAddress(address _addr) public onlyOwner {
+    bankAddress = _addr;
   }
 
   /**
@@ -36,11 +61,11 @@ abstract contract IdoruMinter is Ownable {
     view
     returns (uint256 _amountOut)
   {
-    //!? FIGURE OUT HOW TO FORCE ORDER
-
-    IUniswapV2Pair pair = IUniswapV2Pair(_idoruStablePair);
-    (uint256 res0, uint256 res1, ) = pair.getReserves();
-
+    (uint256 res0, uint256 res1, ) = getReserves(
+      uniswapFactoryAddress,
+      stablecoinAddress,
+      idoruAddress
+    );
     _amountOut = getAmountOut(_amountIn, res0, res1);
   }
 
@@ -52,10 +77,11 @@ abstract contract IdoruMinter is Ownable {
     view
     returns (uint256 _amountIn)
   {
-    //!? FIGURE OUT HOW TO FORCE ORDER
-
-    IUniswapV2Pair pair = IUniswapV2Pair(_idoruStablePair);
-    (uint256 res0, uint256 res1, ) = pair.getReserves();
+    (uint256 res0, uint256 res1, ) = getReserves(
+      uniswapFactoryAddress,
+      stablecoinAddress,
+      idoruAddress
+    );
     _amountIn = getAmountIn(_amountOut, res0, res1);
   }
 
@@ -66,7 +92,7 @@ abstract contract IdoruMinter is Ownable {
    * also I feel like IERC20 is not enough for this -> need to export type IIdoruToken
    */
   function mintIdoru(address to, uint256 amount) private {
-    IERC20 idoruToken = IERC20(_idoruAddress);
+    IERC20 idoruToken = IERC20(idoruAddress);
     idoruToken.mint(to, amount);
   }
 
@@ -74,9 +100,9 @@ abstract contract IdoruMinter is Ownable {
    * user would need to approve this contract for ERC20 stablecoins
    */
   function swapStableIdoru(uint256 _stablecoinAmount) public {
-    IERC20 stableERC20 = IERC20(_stablecoinAddress);
+    IERC20 stableERC20 = IERC20(stablecoinAddress);
 
-    stableERC20.transferFrom(msg.sender, _bankAddress, _stablecoinAmount);
+    stableERC20.transferFrom(msg.sender, bankAddress, _stablecoinAmount);
 
     uint256 idoruAmount = getIdoruAmountOut(_stablecoinAmount);
 

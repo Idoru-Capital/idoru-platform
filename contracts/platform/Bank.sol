@@ -3,7 +3,6 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract ERC20Bank is Ownable {
   mapping(address => bool) private bankUsers; // true if user is a bank user
@@ -42,7 +41,7 @@ contract ERC20Bank is Ownable {
     require(_amount > 0, "Value must be greater than 0");
     // require(_to != address(0), "Invalid address");
 
-    IERC20 token = ERC20(_token);
+    IERC20 token = IERC20(_token);
     // require(balanceOf(msg.sender) >= _value, "Not enough balance");
     // transfer(_to, _value);
     token.transfer(msg.sender, _amount);

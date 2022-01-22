@@ -12,6 +12,9 @@ import "./Verifiable.sol";
 import "./Constants.sol";
 import "./ERC20CVotes.sol";
 
+// no need for it
+// import "./Idoru.interface.sol";
+
 contract Idoru is
   ERC20,
   ERC20Burnable,

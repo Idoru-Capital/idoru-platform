@@ -21,8 +21,10 @@ import "hardhat/console.sol";
 abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   using SafeMath for uint256;
 
-  address[] public delegateAddresses;
-  uint256 public minHoldingBlocks = 100_000;
+  address[] private delegateAddresses;
+  uint256 private minHoldingBlocks = 100_000;
+
+  // to handle floats
   uint256 internal constant POINTSMULTIPLIER = 2**128; // optimization, see https://github.com/ethereum/EIPs/issues/1726#issuecomment-472352728
 
   function changeMinHoldingBlocks(uint256 _minHoldingBlocks)
@@ -31,6 +33,33 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   {
     require(_minHoldingBlocks > 0, "negative minHoldingBlocks");
     minHoldingBlocks = _minHoldingBlocks;
+  }
+
+  /**
+   * @dev Get all delegate addresses
+   */
+  function getDelegateAddresses() public view returns (address[] memory) {
+    return delegateAddresses;
+  }
+
+  /**
+   * @dev Go throught all delegate addresses and get their calculated dividends
+   */
+  function getDelegateDividendsAmounts(uint256 dividendAmount)
+    public
+    view
+    returns (uint256[] memory)
+  {
+    uint256 dividendPerHoldingValue = dividendsPerHoldingValue(dividendAmount);
+
+    // loop through all delegate addresses
+    uint256[] memory dividends = new uint256[](delegateAddresses.length);
+    for (uint256 i = 0; i < delegateAddresses.length; i++) {
+      dividends[i] = minHoldingValue(delegateAddresses[i])
+        .mul(dividendPerHoldingValue)
+        .div(POINTSMULTIPLIER);
+    }
+    return dividends;
   }
 
   function subscribeDividends(address _addr) public virtual {
