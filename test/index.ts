@@ -18,11 +18,12 @@ describe.skip("Idoru token", function () {
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
   let addr3: SignerWithAddress;
+  let addr4: SignerWithAddress;
 
   let ROLES_NAMES: RoleNames;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, addr3] = await ethers.getSigners();
+    [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
 
     const tokenFactory = new Idoru__factory(owner);
     token = await tokenFactory.deploy();
@@ -49,25 +50,25 @@ describe.skip("Idoru token", function () {
     await expect(token.mint(addr1.address, 100)).to.be.reverted;
   });
 
-  it("Should whitelist", async function () {
-    //! Default owner gets all the roles
-    // const wizard = await ROLES_NAMES.WIZARD();
-    // console.log(wizard);
-    // await token.grantRole(wizard, owner.address);
-
-    expect(await token.isVerified(addr1.address)).to.be.false;
-    expect(await token.isVerified(owner.address)).to.be.false;
-    await token.verifyAddress(addr1.address);
-    await token.verifyAddress(owner.address);
-    expect(await token.isVerified(addr1.address)).to.be.true;
-    expect(await token.isVerified(owner.address)).to.be.true;
-    await token.unVerifyAddress(addr1.address);
-    expect(await token.isVerified(addr1.address)).to.be.false;
-
-    const token_addr1 = token.connect(addr1);
-    // await token_addr1.verifyAddress(addr1.address);
-    await token_addr1.unVerifyAddress(addr1.address);
-  });
+  //it("Should whitelist", async function () {
+  //  //! Default owner gets all the roles
+  //  // const wizard = await ROLES_NAMES.WIZARD();
+  //  // console.log(wizard);
+  //  // await token.grantRole(wizard, owner.address);
+  //
+  //  expect(await token.isVerified(addr1.address)).to.be.false;
+  //  expect(await token.isVerified(owner.address)).to.be.false;
+  //  await token.verifyAddress(addr1.address);
+  //  await token.verifyAddress(owner.address);
+  //  expect(await token.isVerified(addr1.address)).to.be.true;
+  //  expect(await token.isVerified(owner.address)).to.be.true;
+  //  await token.unVerifyAddress(addr1.address);
+  //  expect(await token.isVerified(addr1.address)).to.be.false;
+  //
+  //  const token_addr1 = token.connect(addr1);
+  //  // await token_addr1.verifyAddress(addr1.address);
+  //  await token_addr1.unVerifyAddress(addr1.address);
+  //});
 
   it("Balance tracker 2", async function () {
     const token_addr1 = token.connect(addr1);
@@ -83,7 +84,7 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr2.address, initial_balance.div(N).div(50));
     }
 
-    console.log(await token.minHoldingBlocks());
+    // console.log(await token.minHoldingBlocks());
     await token.transfer(addr1.address, 50);
     //await token_addr1.transfer(addr1.address, initial_balance.div(6));
     // expect(
@@ -108,7 +109,7 @@ describe.skip("Idoru token", function () {
     await token_addr1.delegate(addr1.address);
 
     await token.changeMinHoldingBlocks(50);
-    console.log(await token.minHoldingBlocks());
+    // console.log(await token.minHoldingBlocks());
     await token.transfer(addr1.address, initial_balance.div(4));
 
     // expect(await token.hasEnoughBuyingPower(owner.address));
@@ -308,26 +309,101 @@ describe.skip("Idoru token", function () {
     ).to.be.true;
   });
 
-  it.only("minHoldingPower", async function () {
-    // Cases without delegation or too late delegation
+  it.only("minHoldingValue (power)", async function () {
+    // MinHoldingValue function check
 
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
     await token.changeMinHoldingBlocks(10);
     await token_addr1.delegate(addr1.address);
-
+    await token.transfer(addr1.address, initial_balance.div(10));
     // initial neutral blocks
     const M = 20;
     for (let index = 0; index < M; index++) {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
+    expect(
+      (await token.minHoldingValue(addr1.address) > initial_balance.div(50))
+    ).to.be.true;
+    console.log(token.minHoldingValue(addr1.address));
+  });
 
-    await token.transfer(addr1.address, 50);
+  it("MinHoldingValue: delegate after some time", async function () {
+    // delegate after some time. Similar to test for 'HasEnoughBuyingPower', but testing different function.
+
+    const token_addr1 = token.connect(addr1);
+    const token_addr2 = token.connect(addr2);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+
+    // initial neutral blocks
+    const M = 20;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr3.address, initial_balance.div(M).div(50));
+    }
+
+    await token.transfer(addr1.address, initial_balance.div(5));
+    await token.transfer(addr2.address, initial_balance.div(5));
+
+    // neutral blocks
+    const j = 10;
+    for (let index = 0; index < j; index++) {
+      await token.transfer(addr3.address, initial_balance.div(j).div(50));
+    }
+    await token_addr1.delegate(addr1.address); // delegate after some blocks. Delegation trigger checkpoint
+
+    await token_addr2.delegate(addr2.address); // delegate after some blocks but then send "blank" tx
+    await token.transfer(addr2.address, 5); // blank tx to trigger checkpoint. -> no need or change in outcome
+
+    // neutral blocks
+    const N = 10;
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr3.address, initial_balance.div(N).div(50));
+    }
+
+    expect(
+      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+    ).to.be.true;
+
+    expect(
+      (await token.minHoldingValue(addr2.address) > initial_balance.div(10))
+    ).to.be.true;
+  });
+
+  it("DividendsPerHoldingValue calculations", async function () {
+    // Blank test to see if subscribeDividends is ok (is msg.sender the same?)
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token_addr1.subscribeDividends(addr1.address);
+  });
+
+  it("DividendsPerHoldingValue calculations", async function () {
+    // Check if DividendsPerHoldingValue is working properly
+
+    const token_addr1 = token.connect(addr1);
+    const token_addr2 = token.connect(addr2);
+    const token_addr3 = token.connect(addr3);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+    await token_addr1.subscribeDividends(addr1.address);
+    await token_addr2.subscribeDividends(addr2.address);
+    await token_addr3.subscribeDividends(addr3.address);
+
+    // Initial neutral blocks
+    const M = 15;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr4.address, initial_balance.div(M).div(100));
+    }
+
+    await token.transfer(addr1.address, initial_balance.div(50));
+    await token.transfer(addr2.address, initial_balance.div(10));
     // neutral blocks
     const N = 20;
     for (let index = 0; index < N; index++) {
-      await token.transfer(addr2.address, initial_balance.div(N).div(50));
+      await token.transfer(addr2.address, initial_balance.div(N).div(100));
     }
-    console.log(token.minHoldingValue(addr1.address));
+    await token.transfer(addr2.address, initial_balance.div(10));
+    const dividendsamount = initial_balance.div(100)
+    console.log(token.dividendsPerHoldingValue(dividendsamount));
   });
 });
