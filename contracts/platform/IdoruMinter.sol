@@ -6,7 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol";
+import "../uniswap/UniswapV2Library.sol";
+
+import "../interfaces/Idoru.interface.sol";
 
 // Basically we dont need to connect to Uniswap because we will predefine the price
 // at which users can mint new token
@@ -30,7 +32,7 @@ abstract contract IdoruMinter is Ownable {
     address _idoru,
     address _stablecoin,
     address _bank
-  ) public {
+  ) {
     uniswapFactoryAddress = _uniswapFactory;
     idoruAddress = _idoru;
     stablecoinAddress = _stablecoin;
@@ -61,28 +63,28 @@ abstract contract IdoruMinter is Ownable {
     view
     returns (uint256 _amountOut)
   {
-    (uint256 res0, uint256 res1, ) = getReserves(
+    (uint256 res0, uint256 res1) = UniswapV2Library.getReserves(
       uniswapFactoryAddress,
       stablecoinAddress,
       idoruAddress
     );
-    _amountOut = getAmountOut(_amountIn, res0, res1);
+    _amountOut = UniswapV2Library.getAmountOut(_amountIn, res0, res1);
   }
 
   /**
    * amount out is should be in Idoru tokens (IDORU)
    */
-  function getIdoruAmountOut(uint256 _amountOut)
+  function getIdoruAmountIn(uint256 _amountOut)
     public
     view
     returns (uint256 _amountIn)
   {
-    (uint256 res0, uint256 res1, ) = getReserves(
+    (uint256 res0, uint256 res1) = UniswapV2Library.getReserves(
       uniswapFactoryAddress,
       stablecoinAddress,
       idoruAddress
     );
-    _amountIn = getAmountIn(_amountOut, res0, res1);
+    _amountIn = UniswapV2Library.getAmountIn(_amountOut, res0, res1);
   }
 
   /**
@@ -92,8 +94,7 @@ abstract contract IdoruMinter is Ownable {
    * also I feel like IERC20 is not enough for this -> need to export type IIdoruToken
    */
   function mintIdoru(address to, uint256 amount) private {
-    IERC20 idoruToken = IERC20(idoruAddress);
-    idoruToken.mint(to, amount);
+    IIdoru(idoruAddress).mint(to, amount);
   }
 
   /**

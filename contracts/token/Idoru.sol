@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -15,14 +16,7 @@ import "./ERC20CVotes.sol";
 // no need for it
 // import "./Idoru.interface.sol";
 
-contract Idoru is
-  ERC20,
-  ERC20Burnable,
-  Pausable,
-  ERC20Permit,
-  ERC20CVotes,
-  ERC20Verifiable
-{
+contract Idoru is ERC20, ERC20Burnable, Pausable, ERC20Permit, ERC20CVotes {
   constructor() ERC20("Idoru", "IDORU") ERC20Permit("Idoru") {
     // Let's just give owner all the roles
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);

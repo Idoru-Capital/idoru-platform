@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "../token/Idoru.interface.sol";
+import "../interfaces/Idoru.interface.sol";
 
 /**
  * First of all some things are in order to say. It is much easier and safer to just copy native OpenZeppelin contracts.

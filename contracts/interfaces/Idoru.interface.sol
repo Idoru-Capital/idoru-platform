@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @dev Interface of the Idoru token.
  */
 interface IIdoru is IERC20 {
+  // view functions
   function dividendsPerHoldingValue(uint256 dividendAmount)
     external
     view
@@ -18,4 +19,7 @@ interface IIdoru is IERC20 {
     external
     view
     returns (uint256[] memory);
+
+  // state changing functions
+  function mint(address to, uint256 amount) external;
 }
