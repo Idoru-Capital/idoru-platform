@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../token/Idoru.interface.sol";
 
@@ -21,7 +22,7 @@ import "../token/Idoru.interface.sol";
  * Why would we need _payees array?
  */
 
-contract IdoruDividends is Context {
+contract IdoruDividends is Context, Ownable {
   event PayeeAdded(address account, uint256 shares);
   event ERC20PaymentReleased(IERC20 indexed token, address to, uint256 amount);
   event PaymentReceived(address from, uint256 amount);
@@ -48,13 +49,15 @@ contract IdoruDividends is Context {
    * Function which should actually be called to redistribute dividends.
    *TODO probably make this only owner, and make write some safemath checks
    */
-  function distributeDividends(uint256 amount_) public {
-    require(amount_ > 0);
+  function distributeDividends(uint256 amount_) public onlyOwner {
+    require(amount_ > 0, "Amount null");
 
-    address[] payees_ = I_Idoru(_idoruToken).getDelegateAddresses();
-    uint256[] shares_ = I_Idoru(_idoruToken).getDelegateDividendsAmounts();
+    address[] memory payees_ = IIdoru(_idoruToken).getDelegateAddresses();
+    uint256[] memory shares_ = IIdoru(_idoruToken).getDelegateDividendsAmounts(
+      amount_
+    );
 
-    distributeDividendsaddress(payees_, shares_);
+    distributeDividendsAddress(payees_, shares_);
 
     SafeERC20.safeTransferFrom(
       IERC20(_stablecoinToken),
@@ -73,13 +76,13 @@ contract IdoruDividends is Context {
    * All addresses in `payees` must be non-zero. Both arrays must have the same non-zero length, and there must be no
    * duplicates in `payees`.
    */
-  function distributeDividendsaddress(
+  function distributeDividendsAddress(
     address[] memory payees,
     uint256[] memory shares_
   ) private {
     require(
       payees.length == shares_.length,
-      "PaymentSplitter: payees and shares length mismatch"
+      "payees and shares length mismatch"
     );
     require(payees.length > 0, "PaymentSplitter: no payees");
 
@@ -127,6 +130,13 @@ contract IdoruDividends is Context {
    */
   function released(address account) public view returns (uint256) {
     return _released[account];
+  }
+
+  /**
+   * @dev Getter for amount of dividends to be released
+   */
+  function pendingDividends(address account) public view returns (uint256) {
+    return dividendAmount(account) - released(account);
   }
 
   /**
@@ -180,8 +190,12 @@ contract IdoruDividends is Context {
     require(account != address(0), "PaymentSplitter: zero address");
     require(amount_ > 0, "PaymentSplitter: amounts are 0");
 
-    //! BE VERY CAREFUL HERE, NOT SURE IF THIS IS THE RIGHT WAY TO DO THIS
-    _dividendAmounts[account] = _dividendAmounts[account] + amount_;
+    // NOT SURE IF THIS IS THE RIGHT WAY TO DO THIS
+    if (_dividendAmounts[account] > 0) {
+      _dividendAmounts[account] = _dividendAmounts[account] + amount_;
+    } else {
+      _dividendAmounts[account] = amount_;
+    }
     _totalAmount = _totalAmount + amount_;
     emit PayeeAdded(account, amount_);
   }
