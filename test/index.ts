@@ -34,7 +34,7 @@ describe.skip("Idoru token", function () {
     await ROLES_NAMES.deployed();
   });
 
-  it("Should make supply and manipulate it", async function () {
+  it.only("Should make supply and manipulate it", async function () {
     // const [owner, addr1] = await ethers.getSigners();
     const [addr1] = await ethers.getSigners();
 
@@ -309,7 +309,7 @@ describe.skip("Idoru token", function () {
     ).to.be.true;
   });
 
-  it.only("minHoldingValue (power)", async function () {
+  it.only("minHoldingValue normal", async function () {
     // MinHoldingValue function check
 
     const token_addr1 = token.connect(addr1);
@@ -325,56 +325,118 @@ describe.skip("Idoru token", function () {
     expect(
       (await token.minHoldingValue(addr1.address) > initial_balance.div(50))
     ).to.be.true;
+
     console.log(token.minHoldingValue(addr1.address));
   });
 
-  it("MinHoldingValue: delegate after some time", async function () {
-    // delegate after some time. Similar to test for 'HasEnoughBuyingPower', but testing different function.
+  it("minHoldingValue, late delegation", async function () {
+    // MinHoldingValue function check
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(20);
+    await token_addr1.delegate(addr1.address);
+    await token.transfer(addr1.address, initial_balance.div(10));
+    // initial neutral blocks
+    const M = 10;
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    }
+    expect(
+      (await token.minHoldingValue(addr1.address) < initial_balance.div(50))  // too late delegation
+    ).to.be.true;
+    console.log(token.minHoldingValue(addr1.address));
+  });
+
+
+  it("MinHoldingValue: exactly enough blocks (edge case)", async function () {
+    // 2 tests: 1 block short, exactly enough
 
     const token_addr1 = token.connect(addr1);
     const token_addr2 = token.connect(addr2);
     const initial_balance = await token.balanceOf(owner.address);
     await token.changeMinHoldingBlocks(10);
+    await token_addr1.delegate(addr1.address); // delegate after some blocks. Delegation trigger checkpoint
+    await token.transfer(addr1.address, initial_balance.div(5));
+    // neutral blocks
+    const j = 9;
+    for (let index = 0; index < j; index++) {
+      await token.transfer(addr3.address, initial_balance.div(j).div(50));
+    }
+    // 1 tx short:
+    expect(
+      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+    ).to.be.false;
 
-    // initial neutral blocks
-    const M = 20;
+    // Exactly enough
+    expect(
+      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+    ).to.be.true;
+  });
+
+  it("MinHoldingValue: delegate after txs", async function () {
+    // 2 tests: 1 block short, exactly enough
+
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+    await token.transfer(addr1.address, initial_balance.div(5));
+    // neutral blocks
+    const M = 10;
     for (let index = 0; index < M; index++) {
       await token.transfer(addr3.address, initial_balance.div(M).div(50));
     }
+    await token_addr1.delegate(addr1.address);
+    // neutral blocks
+    const j = 9;
+    for (let index = 0; index < j; index++) {
+      await token.transfer(addr3.address, initial_balance.div(j).div(50));
+    }
+    expect(
+      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+    ).to.be.true;
+  });
 
+  it("subscribe dividends check", async function () {
+    // Blank test to see if subscribeDividends function is working (is msg.sender the same between calls?)
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token_addr1.subscribeDividends(addr1.address);
+    await token.changeMinHoldingBlocks(10);
     await token.transfer(addr1.address, initial_balance.div(5));
-    await token.transfer(addr2.address, initial_balance.div(5));
-
     // neutral blocks
     const j = 10;
     for (let index = 0; index < j; index++) {
       await token.transfer(addr3.address, initial_balance.div(j).div(50));
     }
-    await token_addr1.delegate(addr1.address); // delegate after some blocks. Delegation trigger checkpoint
-
-    await token_addr2.delegate(addr2.address); // delegate after some blocks but then send "blank" tx
-    await token.transfer(addr2.address, 5); // blank tx to trigger checkpoint. -> no need or change in outcome
-
-    // neutral blocks
-    const N = 10;
-    for (let index = 0; index < N; index++) {
-      await token.transfer(addr3.address, initial_balance.div(N).div(50));
-    }
-
     expect(
       (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
     ).to.be.true;
 
+  });
+  it("subscribeDividends vs delegate", async function () {
+    // Potential collision between subscribeDividends and delegate
+    const token_addr1 = token.connect(addr1);
+    const token_addr2 = token.connect(addr2);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(10);
+    await token_addr1.delegate(addr1.address);
+    await token_addr2.subscribeDividends(addr2.address);
+    await token_addr1.subscribeDividends(addr1.address);
+    await token_addr2.delegate(addr2.address);
+
+    await token.transfer(addr1.address, initial_balance.div(5));
+    await token.transfer(addr2.address, initial_balance.div(5));
+    // neutral blocks
+    const j = 10;
+    for (let index = 0; index < j; index++) {
+      await token.transfer(addr3.address, initial_balance.div(j).div(50));
+    }
+    expect(
+      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+    ).to.be.true;
     expect(
       (await token.minHoldingValue(addr2.address) > initial_balance.div(10))
     ).to.be.true;
-  });
-
-  it("DividendsPerHoldingValue calculations", async function () {
-    // Blank test to see if subscribeDividends is ok (is msg.sender the same?)
-    const token_addr1 = token.connect(addr1);
-    const initial_balance = await token.balanceOf(owner.address);
-    await token_addr1.subscribeDividends(addr1.address);
   });
 
   it("DividendsPerHoldingValue calculations", async function () {
