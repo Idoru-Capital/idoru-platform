@@ -21,8 +21,8 @@ import "hardhat/console.sol";
 abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   using SafeMath for uint256;
 
-  address[] private delegateAddresses;
-  uint256 private minHoldingBlocks = 100_000;
+  address[] internal delegateAddresses;
+  uint256 internal minHoldingBlocks = 100_000;
 
   // to handle floats
   uint256 internal constant POINTSMULTIPLIER = 2**128; // optimization, see https://github.com/ethereum/EIPs/issues/1726#issuecomment-472352728
