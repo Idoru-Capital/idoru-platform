@@ -58,17 +58,17 @@ describe.only("Platform", function () {
 
     console.log(await ethers.provider.getBalance(owner.address));
 
-    await weth.approve(UNISWAP_ROUTER, ethers.BigNumber.from(10).pow(18));
+    await weth.approve(UNISWAP_ROUTER, ethers.BigNumber.from(10).pow(24));
 
     console.log(await weth.balanceOf(owner.address));
 
-    await uniswap_router_v2.swapETHForExactTokens(
-      0,
+    await uniswap_router_v2.swapExactETHForTokens(
+      1,
       [WETH, USDC],
       owner.address,
       1_000_000_000_000,
       {
-        value: 1,
+        value: ethers.BigNumber.from(10).pow(18),
       }
     );
   });
