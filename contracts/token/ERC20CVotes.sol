@@ -69,7 +69,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   }
 
   /**
-   * return how much dividend should one get per his minHoldingValue. EXagerated for factor POINTSMULTIPLIER!
+   * return how much dividend should one get per his minHoldingValue. Exagerated for factor POINTSMULTIPLIER!
    *   In each distribution, there is a small amount of funds which does not get distributed,
    *     which is `(msg.dividendAmount * POINTSMULTIPLIER) % totalValue()`.
    */
@@ -86,10 +86,10 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     for (uint256 i = 0; i < arrayLength; i++) {
       totalHoldingPower += minHoldingValue(delegateAddresses[i]);
     }
-    require(totalHoldingPower > 0, "TTOTAL HOLDING POWER IS ZERO");
+    require(totalHoldingPower > 0, "TOTAL HOLDING POWER IS ZERO");
     require(dividendAmount > 0, "NO DIVIDENDS TO DISTRIBUTE");
 
-    pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER) / totalHoldingPower;
+    pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER).div(totalHoldingPower);
     return pointsPerShare;
   }
 
@@ -101,7 +101,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     view
     returns (bool)
   {
-    require(numCheckpoints(_addr) > 0, "no checkpoints");
+    require(numCheckpoints(_addr) > 0, "No checkpoints");
 
     uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
       ? block.number - minHoldingBlocks
