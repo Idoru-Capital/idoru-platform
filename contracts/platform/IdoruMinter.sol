@@ -39,6 +39,17 @@ abstract contract IdoruMinter is Ownable {
     bankAddress = _bank;
   }
 
+  uint256 internal rewardPoints = 100; // 1 point = 0.0001 or 0.01% -> 100points=1%
+  function changerewardPercantage(uint256 rewardPoints)
+    public
+    onlyRole(RoleNames.WIZARD)
+  {
+    require(rewardPoints > 0, "negative reward points");
+    rewardPoints = _rewardPoints;
+  }
+
+  
+
   function setUniswapFactoryAddress(address _addr) public onlyOwner {
     uniswapFactoryAddress = _addr;
   }
