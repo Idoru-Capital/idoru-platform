@@ -12,7 +12,7 @@ import {
   ERC20Bank__factory,
 } from "../typechain";
 
-describe.skip("Idoru token", function () {
+describe("Idoru token", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -34,12 +34,12 @@ describe.skip("Idoru token", function () {
     await ROLES_NAMES.deployed();
   });
 
-  it.only("Should make supply and manipulate it", async function () {
+  it("Should make supply and manipulate it", async function () {
     // const [owner, addr1] = await ethers.getSigners();
     const [addr1] = await ethers.getSigners();
 
     expect(await token.name()).to.equal("Idoru");
-    expect(await token.symbol()).to.equal("IDRU");
+    expect(await token.symbol()).to.equal("IDORU");
     expect(await token.decimals()).to.equal(18);
 
     await token.transfer(addr1.address, 100);
@@ -309,7 +309,7 @@ describe.skip("Idoru token", function () {
     ).to.be.true;
   });
 
-  it.only("minHoldingValue normal", async function () {
+  it("minHoldingValue normal", async function () {
     // MinHoldingValue function check
 
     const token_addr1 = token.connect(addr1);
@@ -323,7 +323,7 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
     expect(
-      (await token.minHoldingValue(addr1.address) > initial_balance.div(50))
+      (await token.minHoldingValue(addr1.address)) > initial_balance.div(50)
     ).to.be.true;
 
     console.log(token.minHoldingValue(addr1.address));
@@ -342,11 +342,10 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
     expect(
-      (await token.minHoldingValue(addr1.address) < initial_balance.div(50))  // too late delegation
+      (await token.minHoldingValue(addr1.address)) < initial_balance.div(50) // too late delegation
     ).to.be.true;
     console.log(token.minHoldingValue(addr1.address));
   });
-
 
   it("MinHoldingValue: exactly enough blocks (edge case)", async function () {
     // 2 tests: 1 block short, exactly enough
@@ -364,12 +363,12 @@ describe.skip("Idoru token", function () {
     }
     // 1 tx short:
     expect(
-      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+      (await token.minHoldingValue(addr1.address)) > initial_balance.div(10)
     ).to.be.false;
 
     // Exactly enough
     expect(
-      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+      (await token.minHoldingValue(addr1.address)) > initial_balance.div(10)
     ).to.be.true;
   });
 
@@ -392,7 +391,7 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr3.address, initial_balance.div(j).div(50));
     }
     expect(
-      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+      (await token.minHoldingValue(addr1.address)) > initial_balance.div(10)
     ).to.be.true;
   });
 
@@ -409,9 +408,8 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr3.address, initial_balance.div(j).div(50));
     }
     expect(
-      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+      (await token.minHoldingValue(addr1.address)) > initial_balance.div(10)
     ).to.be.true;
-
   });
   it("subscribeDividends vs delegate", async function () {
     // Potential collision between subscribeDividends and delegate
@@ -432,10 +430,10 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr3.address, initial_balance.div(j).div(50));
     }
     expect(
-      (await token.minHoldingValue(addr1.address) > initial_balance.div(10))
+      (await token.minHoldingValue(addr1.address)) > initial_balance.div(10)
     ).to.be.true;
     expect(
-      (await token.minHoldingValue(addr2.address) > initial_balance.div(10))
+      (await token.minHoldingValue(addr2.address)) > initial_balance.div(10)
     ).to.be.true;
   });
 
@@ -465,7 +463,7 @@ describe.skip("Idoru token", function () {
       await token.transfer(addr2.address, initial_balance.div(N).div(100));
     }
     await token.transfer(addr2.address, initial_balance.div(10));
-    const dividendsamount = initial_balance.div(100)
+    const dividendsamount = initial_balance.div(100);
     console.log(token.dividendsPerHoldingValue(dividendsamount));
   });
 });
