@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 
 // import { Idoru } from "../typechain/index";
 import {
@@ -25,6 +25,15 @@ describe("Idoru token", function () {
   beforeEach(async function () {
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
 
+    [owner, addr1, addr2, addr3, addr4].forEach(async (add) => {
+      await network.provider.send("hardhat_setBalance", [
+        add.address,
+        ethers.BigNumber.from(10).pow(24).toHexString(),
+      ]);
+    });
+  });
+
+  beforeEach(async function () {
     const tokenFactory = new Idoru__factory(owner);
     token = await tokenFactory.deploy();
     await token.deployed();

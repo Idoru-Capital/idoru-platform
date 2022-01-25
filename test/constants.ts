@@ -10,4 +10,5 @@ export const tokenABI = [
   "function balanceOf(address who) public view returns(uint)",
   "function transfer(address to, uint amount) public returns(bool)",
   "function transferFrom(address from, address to, uint amount) public returns(bool)",
+  "function decimals() public view returns(uint)",
 ];
