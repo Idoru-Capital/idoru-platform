@@ -4,6 +4,8 @@ export const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 export const UNISWAP_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 export const routerABI = [
   "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
+  "function addLiquidity( address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB, uint liquidity)",
+  "function swapExactTokensForTokens( uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
 ];
 export const tokenABI = [
   "function approve(address spender, uint amount) public returns(bool)",
@@ -11,4 +13,8 @@ export const tokenABI = [
   "function transfer(address to, uint amount) public returns(bool)",
   "function transferFrom(address from, address to, uint amount) public returns(bool)",
   "function decimals() public view returns(uint)",
+];
+
+export const uniswapFactoryABI = [
+  "function createPair(address tokenA, address tokenB) external returns (address pair)",
 ];

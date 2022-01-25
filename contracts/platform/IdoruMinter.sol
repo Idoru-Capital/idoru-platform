@@ -20,7 +20,7 @@ import "../interfaces/Idoru.interface.sol";
 // which is available here https://docs.uniswap.org/protocol/V2/reference/smart-contracts/library
 // alternatevly just getReserves() function on the from uniswap library
 
-abstract contract IdoruMinter is Ownable {
+contract IdoruMinter is Ownable {
   //   address private _idoruStablePair;
   address private uniswapFactoryAddress;
   address private idoruAddress;
@@ -41,7 +41,7 @@ abstract contract IdoruMinter is Ownable {
 
   //uint256 internal rewardPoints = 100; // 1 point = 0.0001 or 0.01% -> 100points=1%
 
-    /**
+  /**
    * Change factor for better price if minting
    */
   //function changerewardPoints(uint256 rewardPoints)
@@ -51,9 +51,6 @@ abstract contract IdoruMinter is Ownable {
   //  require(rewardPoints > 0, "Negative reward points");
   //  rewardPoints = _rewardPoints;
   //}
-
-
-
 
   function setUniswapFactoryAddress(address _addr) public onlyOwner {
     uniswapFactoryAddress = _addr;

@@ -408,7 +408,7 @@ describe("Idoru token", function () {
     // Blank test to see if subscribeDividends function is working (is msg.sender the same between calls?)
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
-    await token_addr1.subscribeDividends(addr1.address);
+    await token_addr1.subscribeDividends();
     await token.changeMinHoldingBlocks(10);
     await token.transfer(addr1.address, initial_balance.div(5));
     // neutral blocks
@@ -427,8 +427,8 @@ describe("Idoru token", function () {
     const initial_balance = await token.balanceOf(owner.address);
     await token.changeMinHoldingBlocks(10);
     await token_addr1.delegate(addr1.address);
-    await token_addr2.subscribeDividends(addr2.address);
-    await token_addr1.subscribeDividends(addr1.address);
+    await token_addr2.subscribeDividends();
+    await token_addr1.subscribeDividends();
     await token_addr2.delegate(addr2.address);
 
     await token.transfer(addr1.address, initial_balance.div(5));
@@ -454,9 +454,9 @@ describe("Idoru token", function () {
     const token_addr3 = token.connect(addr3);
     const initial_balance = await token.balanceOf(owner.address);
     await token.changeMinHoldingBlocks(10);
-    await token_addr1.subscribeDividends(addr1.address);
-    await token_addr2.subscribeDividends(addr2.address);
-    await token_addr3.subscribeDividends(addr3.address);
+    await token_addr1.subscribeDividends();
+    await token_addr2.subscribeDividends();
+    await token_addr3.subscribeDividends();
 
     // Initial neutral blocks
     const M = 15;

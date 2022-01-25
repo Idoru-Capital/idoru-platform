@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
@@ -62,10 +62,10 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     return dividends;
   }
 
-  function subscribeDividends(address _addr) public virtual {
-    require(delegates(_addr) == address(0), "Already subscribed"); // check if already subscribed
-    delegateAddresses.push(_addr);
-    delegate(_addr); // ?
+  function subscribeDividends() public virtual {
+    require(delegates(msg.sender) == address(0), "Already subscribed"); // check if already subscribed
+    delegateAddresses.push(msg.sender);
+    delegate(msg.sender); // ?
   }
 
   /**
@@ -89,7 +89,9 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     require(totalHoldingPower > 0, "TOTAL HOLDING POWER IS ZERO");
     require(dividendAmount > 0, "NO DIVIDENDS TO DISTRIBUTE");
 
-    pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER).div(totalHoldingPower);
+    pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER).div(
+      totalHoldingPower
+    );
     return pointsPerShare;
   }
 
