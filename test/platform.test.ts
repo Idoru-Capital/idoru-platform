@@ -1,34 +1,20 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-// import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import { Contract } from "ethers";
 
 import * as uniswap from "@uniswap/v2-sdk";
 
-// import { Idoru } from "../typechain/index";
 import {
   ERC20Bank,
   ERC20Bank__factory,
   Idoru,
-  IdoruMinter,
   IdoruMinter__factory,
   Idoru__factory,
   RoleNames,
   RoleNames__factory,
-  // ERC20Bank,
-  // ERC20Bank__factory,
-  // IdoruMinter,
-  // IdoruMinter__factory,
 } from "../typechain";
 
-import {
-  routerABI,
-  tokenABI,
-  uniswapFactoryABI,
-  UNISWAP_ROUTER,
-  USDC,
-  WETH,
-} from "./constants";
+import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
 import { expect } from "chai";
 
 describe.only("Platform", function () {
@@ -42,7 +28,6 @@ describe.only("Platform", function () {
   let bank: ERC20Bank;
 
   let uniswap_router_v2: Contract;
-  let uniswap_factory_v2: Contract;
   let weth: Contract;
   let usdc: Contract;
 
@@ -52,11 +37,6 @@ describe.only("Platform", function () {
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
 
     uniswap_router_v2 = new ethers.Contract(UNISWAP_ROUTER, routerABI, owner);
-    uniswap_factory_v2 = new ethers.Contract(
-      uniswap.FACTORY_ADDRESS,
-      uniswapFactoryABI,
-      owner
-    );
 
     weth = new ethers.Contract(WETH, tokenABI, owner);
     usdc = new ethers.Contract(USDC, tokenABI, owner);
@@ -227,7 +207,7 @@ describe.only("Platform", function () {
     );
     await idoruMinter.deployed();
 
-    // easier to test this
+    // easier to test with this
     await token.changeMinHoldingBlocks(ethers.BigNumber.from(5));
 
     await token_1.subscribeDividends();

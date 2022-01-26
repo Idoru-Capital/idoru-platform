@@ -20,8 +20,6 @@ describe.skip("Bank", function () {
   let addr2: SignerWithAddress;
   let addr3: SignerWithAddress;
 
-  // let ROLES_NAMES: RoleNames;
-
   beforeEach(async function () {
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
