@@ -349,14 +349,16 @@ describe("Idoru token", function () {
     ).to.be.true;
   });
 
-  it("minHoldingValue; no checkpoints", async function () {
+  it.only("minHoldingValue; no checkpoints", async function () {
     // MinHoldingValue; expect to be reverted "No checkpoints"
 
     const token_addr1 = token.connect(addr1);
-    //const initial_balance = await token.balanceOf(owner.address);
+    const initial_balance = await token.balanceOf(owner.address);
     await token_addr1.delegate(addr1.address);
 
-    expect(await token.minHoldingValue(addr1.address)).to.be.reverted; // No checkpoints
+    expect(
+      (await token.minHoldingValue(addr1.address)).lt(initial_balance.div(initial_balance)) // greater than 0
+    ).to.be.true; // Enough blocks after delegation
   });
 
   it("minHoldingValue, late delegation", async function () {
@@ -550,12 +552,11 @@ describe("Idoru token", function () {
     for (let index = 0; index < N; index++) {
       await token.transfer(addr2.address, initial_balance.div(N).div(100));
     }
-    await token.transfer(addr2.address, initial_balance.div(10));
-    const dividendsamount = initial_balance.div(100);
-    console.log(token.dividendsPerHoldingValue(dividendsamount));
+    console.log(await token.dividendsPerHoldingValue(100));
+
   });
 
-  it.only("DividendsPerHoldingValue 2", async function () {
+  it("DividendsPerHoldingValue 2", async function () {
     // Check if DividendsPerHoldingValue is working properly
 
     const token_addr1 = token.connect(addr1);
