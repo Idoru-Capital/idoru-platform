@@ -121,15 +121,16 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   /**
    * Return min share of user in last minHoldingBlocks
    */
-  function minHoldingValue(address _addr) public view returns (uint256) {
-    require(numCheckpoints(_addr) > 0, "no checkpoints");
+  function minHoldingValue(address _addr) public view returns (uint256) 
+  {
+    require(numCheckpoints(_addr) > 0, "No checkpoints");
     uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
       ? block.number - minHoldingBlocks
       : 0;
     uint256 minimum;
-    minimum = uint256(checkpoints(_addr, numCheckpoints(_addr)).votes); // initialize min to last checkpoin
+    minimum = getPastVotes(_addr, startBlock); // initialize min to last checkpoin
     for (uint32 i = numCheckpoints(_addr); i > startBlock; i--) {
-      minimum = uint256(Math.min(minimum, checkpoints(_addr, i).votes));
+      minimum = uint256(Math.min(minimum, checkpoints(_addr, i-1).votes));
     }
     return minimum;
   }

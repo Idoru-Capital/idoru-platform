@@ -17,7 +17,7 @@ import {
 import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
 import { expect } from "chai";
 
-describe.only("Platform", function () {
+describe.skip("Platform", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
