@@ -29,7 +29,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     public
     onlyRole(RoleNames.WIZARD)
   {
-    require(_minHoldingBlocks > 0, "negative minHoldingBlocks");
+    //require(_minHoldingBlocks > 0, "negative minHoldingBlocks");
     minHoldingBlocks = _minHoldingBlocks;
   }
 
@@ -84,8 +84,8 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     for (uint256 i = 0; i < arrayLength; i++) {
       totalHoldingPower += minHoldingValue(delegateAddresses[i]);
     }
-    require(totalHoldingPower > 0, "TOTAL HOLDING POWER IS ZERO");
-    require(dividendAmount > 0, "NO DIVIDENDS TO DISTRIBUTE");
+    //require(totalHoldingPower > 0, "TOTAL HOLDING POWER IS ZERO");
+    //require(dividendAmount > 0, "NO DIVIDENDS TO DISTRIBUTE");
 
     pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER).div(
       totalHoldingPower
@@ -120,7 +120,10 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
    * Return min share of user in last minHoldingBlocks
    */
   function minHoldingValue(address _addr) public view returns (uint256) {
-    require(numCheckpoints(_addr) > 0, "No checkpoints");
+    if(numCheckpoints(_addr) > 0)
+    {  
+      return 0; // No checkpoints
+    }
     uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
       ? block.number - minHoldingBlocks
       : 0;
