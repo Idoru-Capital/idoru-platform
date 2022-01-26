@@ -21,12 +21,12 @@ abstract contract ERC20Verifiable is AccessControl {
   mapping(address => bool) private verified;
 
   function verifyAddress(address _addr) public onlyRole(RoleNames.WIZARD) {
-    require(!verified[_addr], "Already verifieded");
+    require(!verified[_addr], "Already verified");
     verified[_addr] = true;
   }
 
   function unVerifyAddress(address _addr) public onlyRole(RoleNames.WIZARD) {
-    require(verified[_addr], "Not verifieded");
+    require(verified[_addr], "Not verified");
     verified[_addr] = false;
   }
 

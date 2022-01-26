@@ -12,7 +12,7 @@ import {
   ERC20Bank__factory,
 } from "../typechain";
 
-describe.skip("Bank", function () {
+describe("Bank", function () {
   let token: Idoru;
   let bank: ERC20Bank;
   let owner: SignerWithAddress;

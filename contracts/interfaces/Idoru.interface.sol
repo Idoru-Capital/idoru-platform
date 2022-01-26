@@ -20,6 +20,8 @@ interface IIdoru is IERC20 {
     view
     returns (uint256[] memory);
 
+  function isVerified(address _addr) external view returns (bool);
+
   // state changing functions
   function mint(address to, uint256 amount) external;
 }

@@ -9,6 +9,8 @@ import "../uniswap/UniswapV2Library.sol";
 
 import "../interfaces/Idoru.interface.sol";
 
+import "hardhat/console.sol";
+
 // Basically we dont need to connect to Uniswap because we will predefine the price
 // at which users can mint new token
 
@@ -25,7 +27,8 @@ contract IdoruMinter is Ownable {
 
   address private uniswapFactoryAddress;
   address private idoruAddress;
-  address private stablecoinAddress;
+  address private idoruStablePoolAddress;
+  mapping(address => bool) private supportedStablecoins;
   address private bankAddress;
 
   constructor(
@@ -36,35 +39,41 @@ contract IdoruMinter is Ownable {
   ) {
     uniswapFactoryAddress = _uniswapFactory;
     idoruAddress = _idoru;
-    stablecoinAddress = _stablecoin;
+    idoruStablePoolAddress = _stablecoin;
+    supportedStablecoins[_stablecoin] = true;
     bankAddress = _bank;
   }
 
   uint256 internal rewardPoints = 10_100; // 100 point = 1% but its for multiplying so =10_000 (*=1+diff)
   uint256 internal fixedPricePresale = 1_000_000; // price = 1000_000* dollar/token (so higher price means more valuable token)
+
   /**
    * Change factor for better price if minting. 
    100 point = 1% but its for multiplying so =10_000 (*=1+diff)
    */
-  function changerewardPoints(uint256 _rewardPoints)
-    public
-    onlyOwner
-  {
+  function changerewardPoints(uint256 _rewardPoints) public onlyOwner {
     require(rewardPoints > 10_000, "Negative reward");
-    rewardPoints = _rewardPoints; 
+    rewardPoints = _rewardPoints;
   }
 
-    /**
+  /**
    * Change fixed price in presale
    */
-  function changePricePresale(uint256 _fixedPricePresale)
-    public
-    onlyOwner
-  {
+  function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
     require(_fixedPricePresale > 0, "Negative reward points");
     fixedPricePresale = _fixedPricePresale;
   }
 
+  /**
+   * Check if user is verified (KYC) on token
+   */
+  // modifier senderVerified() {
+  //   require(
+  //     IIdoru(idoruAddress).isVerified(msg.sender),
+  //     "You are not verified"
+  //   );
+  //   _;
+  // }
 
   /**
    * amount in is should be in stablecoins (UDSC)
@@ -78,7 +87,7 @@ contract IdoruMinter is Ownable {
     require(fixedPricePresale > 0, "Negative fixed price");
     _amountOut = _amountIn.mul(1_000_000) / (fixedPricePresale);
   }
-  
+
   function setUniswapFactoryAddress(address _addr) public onlyOwner {
     uniswapFactoryAddress = _addr;
   }
@@ -87,8 +96,12 @@ contract IdoruMinter is Ownable {
     idoruAddress = _addr;
   }
 
-  function setStablecoinAddress(address _addr) public onlyOwner {
-    stablecoinAddress = _addr;
+  function addStablecoinAddress(address _addr) public onlyOwner {
+    supportedStablecoins[_addr] = true;
+  }
+
+  function removeStablecoinAddress(address _addr) public onlyOwner {
+    supportedStablecoins[_addr] = false;
   }
 
   function setBankAddress(address _addr) public onlyOwner {
@@ -105,14 +118,14 @@ contract IdoruMinter is Ownable {
   {
     (uint256 res0, uint256 res1) = UniswapV2Library.getReserves(
       uniswapFactoryAddress,
-      stablecoinAddress,
+      idoruStablePoolAddress,
       idoruAddress
     );
     require(_amountIn > 0, "Negative amount in");
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
-    _amountOut = (_amountIn.mul(res1)/(res0)).mul(rewardPoints)/(10_000);
+    _amountOut = (_amountIn.mul(res1) / (res0)).mul(rewardPoints) / (10_000);
     // _amountOut = UniswapV2Library.getAmountOut(_amountIn, res0, res1); // Old version
   }
 
@@ -126,14 +139,14 @@ contract IdoruMinter is Ownable {
   {
     (uint256 res0, uint256 res1) = UniswapV2Library.getReserves(
       uniswapFactoryAddress,
-      stablecoinAddress,
+      idoruStablePoolAddress,
       idoruAddress
     );
     require(_amountOut > 0, "Negative amount in");
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
-    _amountIn = (_amountOut.mul(res0) / res1).mul(10_000) /rewardPoints;
+    _amountIn = (_amountOut.mul(res0) / res1).mul(10_000) / rewardPoints;
     // _amountIn = UniswapV2Library.getAmountIn(_amountOut, res0, res1);  // Old version
   }
 
@@ -151,7 +164,9 @@ contract IdoruMinter is Ownable {
    * user would need to approve this contract for ERC20 stablecoins
    */
   function swapStableIdoru(uint256 _stablecoinAmount) public {
-    IERC20 stableERC20 = IERC20(stablecoinAddress);
+    // console.log(IIdoru(idoruAddress).isVerified(msg.sender));
+
+    IERC20 stableERC20 = IERC20(idoruStablePoolAddress);
 
     stableERC20.transferFrom(msg.sender, bankAddress, _stablecoinAmount);
 
