@@ -122,6 +122,7 @@ describe.only("Idoru minter Contract", function () {
     );
 
     await token_1.subscribeDividends();
+    await token.verifyAddress(addr1.address);
 
     // give addr1 some USDC
     await usdc.transfer(addr1.address, ethers.BigNumber.from(10).pow(6 + 5)); // hundred thousand USDC

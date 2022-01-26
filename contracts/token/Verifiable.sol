@@ -24,7 +24,7 @@ abstract contract ERC20Verifiable is AccessControl {
   }
 
   function unVerifyAddress(address _addr) public onlyRole(RoleNames.WIZARD) {
-    require(verified[_addr], "Not verified");
+    // require(verified[_addr], "Not verified");
     verified[_addr] = false;
   }
 

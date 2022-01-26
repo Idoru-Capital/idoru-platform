@@ -67,13 +67,13 @@ contract IdoruMinter is Ownable {
   /**
    * Check if user is verified (KYC) on token
    */
-  // modifier senderVerified() {
-  //   require(
-  //     IIdoru(idoruAddress).isVerified(msg.sender),
-  //     "You are not verified"
-  //   );
-  //   _;
-  // }
+  modifier senderVerified() {
+    require(
+      IIdoru(idoruAddress).isVerified(msg.sender),
+      "You are not verified"
+    );
+    _;
+  }
 
   /**
    * amount in is should be in stablecoins (UDSC)
@@ -163,7 +163,7 @@ contract IdoruMinter is Ownable {
   /**
    * user would need to approve this contract for ERC20 stablecoins
    */
-  function swapStableIdoru(uint256 _stablecoinAmount) public {
+  function swapStableIdoru(uint256 _stablecoinAmount) public senderVerified {
     // console.log(IIdoru(idoruAddress).isVerified(msg.sender));
 
     IERC20 stableERC20 = IERC20(idoruStablePoolAddress);
