@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Constants.sol";
 
-import "hardhat/console.sol";
-
 /**
  * basic functionality of verified addresses
  * addresses confirmed off-chain

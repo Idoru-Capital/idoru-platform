@@ -10,8 +10,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "./Constants.sol";
 
-import "hardhat/console.sol";
-
 /**
  * will be adding to default implementation a little
  * we need to implement special function to check
