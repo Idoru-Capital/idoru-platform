@@ -9,6 +9,8 @@ import "../uniswap/UniswapV2Library.sol";
 
 import "../interfaces/Idoru.interface.sol";
 
+import "hardhat/console.sol";
+
 // Basically we dont need to connect to Uniswap because we will predefine the price
 // at which users can mint new token
 
@@ -20,8 +22,7 @@ import "../interfaces/Idoru.interface.sol";
 // alternatevly just getReserves() function on the from uniswap library
 
 contract IdoruMinter is Ownable {
-  // variables
-
+  //   address private _idoruStablePair;
   using SafeMath for uint256;
 
   address private uniswapFactoryAddress;
@@ -30,9 +31,6 @@ contract IdoruMinter is Ownable {
   mapping(address => bool) private supportedStablecoins;
   address private bankAddress;
 
-  uint256 internal rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
-  uint256 internal fixedPricePresale = 1_000_000 * 1_000_000_000_000_000_000 / 1000_000; // price = 1000_000* token/ dollar (so higher price means less valuable token)
-  //1_000_000_000_000_000_000 -> IIdoru.decimals() !!
   constructor(
     address _uniswapFactory,
     address _idoru,
@@ -46,18 +44,8 @@ contract IdoruMinter is Ownable {
     bankAddress = _bank;
   }
 
-  /**
-   * Check if user is verified (KYC) on token
-   */
-  modifier senderVerified() {
-    require(
-      IIdoru(idoruAddress).isVerified(msg.sender),
-      "You are not verified"
-    );
-    _;
-  }
-
-  // var changing function
+  uint256 internal rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
+  uint256 internal fixedPricePresale = 1_000_000; // price = 1000_000* dollar/token (so higher price means more valuable token)
 
   /**
    * Change factor for better price if minting. 
@@ -69,49 +57,23 @@ contract IdoruMinter is Ownable {
   }
 
   /**
-   * Change fixed price in presale. price = 1000_000* dollar/token. Higher price means more valuable token)
+   * Change fixed price in presale
    */
   function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
-    require(_fixedPricePresale > 0, "Negative presale price");
-    fixedPricePresale = _fixedPricePresale* 1_000_000_000_000_000_000 / 1000_000; //1_000_000_000_000_000_000 -> IIdoru.decimals() !!
+    require(_fixedPricePresale > 0, "Negative reward points");
+    fixedPricePresale = _fixedPricePresale;
   }
 
   /**
-   * Replace uniswap factory address - probably unnecessary
+   * Check if user is verified (KYC) on token
    */
-  function changeUniswapFactoryAddress(address _addr) public onlyOwner {
-    uniswapFactoryAddress = _addr;
+  modifier senderVerified() {
+    require(
+      IIdoru(idoruAddress).isVerified(msg.sender),
+      "You are not verified"
+    );
+    _;
   }
-
-  /**
-   * Change Idoru token address
-   */
-  function changeIdoruAddress(address _addr) public onlyOwner {
-    idoruAddress = _addr;
-  }
-
-  /**
-   * Add stablecoin to the list of supported stablecoins
-   */
-  function addStablecoinAddress(address _addr) public onlyOwner {
-    supportedStablecoins[_addr] = true;
-  }
-
-  /**
-   * Remove stablecoin from the list of supported stablecoins
-   */
-  function removeStablecoinAddress(address _addr) public onlyOwner {
-    supportedStablecoins[_addr] = false;
-  }
-
-  /**
-   * Change Bank address
-   */
-  function changeBankAddress(address _addr) public onlyOwner {
-    bankAddress = _addr;
-  }
-
-  // View functions
 
   /**
    * amount in is should be in stablecoins (UDSC)
@@ -123,7 +85,27 @@ contract IdoruMinter is Ownable {
   {
     require(_amountIn > 0, "Negative amount in");
     require(fixedPricePresale > 0, "Negative fixed price");
-    _amountOut = _amountIn * fixedPricePresale / 1_000_000;
+    _amountOut = _amountIn*1_000_000/fixedPricePresale;
+  }
+
+  function setUniswapFactoryAddress(address _addr) public onlyOwner {
+    uniswapFactoryAddress = _addr;
+  }
+
+  function setIdoruAddress(address _addr) public onlyOwner {
+    idoruAddress = _addr;
+  }
+
+  function addStablecoinAddress(address _addr) public onlyOwner {
+    supportedStablecoins[_addr] = true;
+  }
+
+  function removeStablecoinAddress(address _addr) public onlyOwner {
+    supportedStablecoins[_addr] = false;
+  }
+
+  function setBankAddress(address _addr) public onlyOwner {
+    bankAddress = _addr;
   }
 
   /**
@@ -143,7 +125,7 @@ contract IdoruMinter is Ownable {
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
-    _amountOut = (((_amountIn * res1) / res0) * rewardPoints) / 10_000; // sol>0.8 handle overflows
+    _amountOut = (_amountIn * res1 / res0) * rewardPoints / 10_000;  // sol>0.8 handle overflows
     // _amountOut = UniswapV2Library.getAmountOut(_amountIn, res0, res1); // Old version
   }
 
@@ -164,11 +146,9 @@ contract IdoruMinter is Ownable {
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
-    _amountIn = (((_amountOut * res0) / res1) * 10_000) / rewardPoints;
+    _amountIn = (_amountOut * res0 / res1)  * 10_000 / rewardPoints;
     // _amountIn = UniswapV2Library.getAmountIn(_amountOut, res0, res1);  // Old version
   }
-
-  // state changing functions
 
   /**
    * we can do this (if) the contract has minter permission
@@ -181,19 +161,7 @@ contract IdoruMinter is Ownable {
   }
 
   /**
-   * Event that gets triggered on every mint of Idoru tokens
-   */
-  event SwapForIdoru(
-    address indexed _stablecoin,
-    address indexed _idoru,
-    uint256 _amountIn,
-    uint256 _amountOut
-  );
-
-  /**
    * user would need to approve this contract for ERC20 stablecoins
-
-   * EMITS SwapForIdoru
    */
   function swapStableIdoru(uint256 _stablecoinAmount) public senderVerified {
     // console.log(IIdoru(idoruAddress).isVerified(msg.sender));
@@ -205,12 +173,5 @@ contract IdoruMinter is Ownable {
     uint256 idoruAmount = getIdoruAmountOut(_stablecoinAmount);
 
     mintIdoru(msg.sender, idoruAmount);
-
-    emit SwapForIdoru(
-      idoruStablePoolAddress,
-      idoruAddress,
-      _stablecoinAmount,
-      idoruAmount
-    );
   }
 }
