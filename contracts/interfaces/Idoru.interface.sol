@@ -22,6 +22,8 @@ interface IIdoru is IERC20 {
 
   function isVerified(address _addr) external view returns (bool);
 
+  function decimals() public view virtual override returns (uint8)
+
   // state changing functions
   function mint(address to, uint256 amount) external;
 }
