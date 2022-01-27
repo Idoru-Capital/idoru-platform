@@ -16,11 +16,15 @@ import "./Constants.sol";
  * but this is more flexible, and we can see who is verified
  */
 abstract contract ERC20Verifiable is AccessControl {
+  event Verified(address indexed _verified);
+
   mapping(address => bool) private verified;
 
   function verifyAddress(address _addr) public onlyRole(RoleNames.WIZARD) {
     require(!verified[_addr], "Already verified");
     verified[_addr] = true;
+
+    emit Verified(_addr);
   }
 
   function unVerifyAddress(address _addr) public onlyRole(RoleNames.WIZARD) {

@@ -9,8 +9,6 @@ import "../uniswap/UniswapV2Library.sol";
 
 import "../interfaces/Idoru.interface.sol";
 
-import "hardhat/console.sol";
-
 // Basically we dont need to connect to Uniswap because we will predefine the price
 // at which users can mint new token
 
@@ -22,7 +20,8 @@ import "hardhat/console.sol";
 // alternatevly just getReserves() function on the from uniswap library
 
 contract IdoruMinter is Ownable {
-  //   address private _idoruStablePair;
+  // variables
+
   using SafeMath for uint256;
 
   address private uniswapFactoryAddress;
@@ -30,6 +29,9 @@ contract IdoruMinter is Ownable {
   address private idoruStablePoolAddress;
   mapping(address => bool) private supportedStablecoins;
   address private bankAddress;
+
+  uint256 internal rewardPoints = 10_100; // 100 point = 1% but its for multiplying so =10_000 (*=1+diff)
+  uint256 internal fixedPricePresale = 1_000_000; // price = 1000_000* dollar/token (so higher price means more valuable token)
 
   constructor(
     address _uniswapFactory,
@@ -44,8 +46,18 @@ contract IdoruMinter is Ownable {
     bankAddress = _bank;
   }
 
-  uint256 internal rewardPoints = 10_100; // 100 point = 1% but its for multiplying so =10_000 (*=1+diff)
-  uint256 internal fixedPricePresale = 1_000_000; // price = 1000_000* dollar/token (so higher price means more valuable token)
+  /**
+   * Check if user is verified (KYC) on token
+   */
+  modifier senderVerified() {
+    require(
+      IIdoru(idoruAddress).isVerified(msg.sender),
+      "You are not verified"
+    );
+    _;
+  }
+
+  // var changing function
 
   /**
    * Change factor for better price if minting. 
@@ -65,15 +77,41 @@ contract IdoruMinter is Ownable {
   }
 
   /**
-   * Check if user is verified (KYC) on token
+   * Replace uniswap factory address - probably unnecessary
    */
-  modifier senderVerified() {
-    require(
-      IIdoru(idoruAddress).isVerified(msg.sender),
-      "You are not verified"
-    );
-    _;
+  function changeUniswapFactoryAddress(address _addr) public onlyOwner {
+    uniswapFactoryAddress = _addr;
   }
+
+  /**
+   * Change Idoru token address
+   */
+  function changeIdoruAddress(address _addr) public onlyOwner {
+    idoruAddress = _addr;
+  }
+
+  /**
+   * Add stablecoin to the list of supported stablecoins
+   */
+  function addStablecoinAddress(address _addr) public onlyOwner {
+    supportedStablecoins[_addr] = true;
+  }
+
+  /**
+   * Remove stablecoin from the list of supported stablecoins
+   */
+  function removeStablecoinAddress(address _addr) public onlyOwner {
+    supportedStablecoins[_addr] = false;
+  }
+
+  /**
+   * Change Bank address
+   */
+  function changeBankAddress(address _addr) public onlyOwner {
+    bankAddress = _addr;
+  }
+
+  // View functions
 
   /**
    * amount in is should be in stablecoins (UDSC)
@@ -86,26 +124,6 @@ contract IdoruMinter is Ownable {
     require(_amountIn > 0, "Negative amount in");
     require(fixedPricePresale > 0, "Negative fixed price");
     _amountOut = _amountIn.mul(1_000_000) / (fixedPricePresale);
-  }
-
-  function setUniswapFactoryAddress(address _addr) public onlyOwner {
-    uniswapFactoryAddress = _addr;
-  }
-
-  function setIdoruAddress(address _addr) public onlyOwner {
-    idoruAddress = _addr;
-  }
-
-  function addStablecoinAddress(address _addr) public onlyOwner {
-    supportedStablecoins[_addr] = true;
-  }
-
-  function removeStablecoinAddress(address _addr) public onlyOwner {
-    supportedStablecoins[_addr] = false;
-  }
-
-  function setBankAddress(address _addr) public onlyOwner {
-    bankAddress = _addr;
   }
 
   /**
@@ -161,7 +179,19 @@ contract IdoruMinter is Ownable {
   }
 
   /**
+   * Event that gets triggered on every mint of Idoru tokens
+   */
+  event SwapForIdoru(
+    address indexed _stablecoin,
+    address indexed _idoru,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
+
+  /**
    * user would need to approve this contract for ERC20 stablecoins
+
+   * EMITS SwapForIdoru
    */
   function swapStableIdoru(uint256 _stablecoinAmount) public senderVerified {
     // console.log(IIdoru(idoruAddress).isVerified(msg.sender));
@@ -173,5 +203,12 @@ contract IdoruMinter is Ownable {
     uint256 idoruAmount = getIdoruAmountOut(_stablecoinAmount);
 
     mintIdoru(msg.sender, idoruAmount);
+
+    emit SwapForIdoru(
+      idoruStablePoolAddress,
+      idoruAddress,
+      _stablecoinAmount,
+      idoruAmount
+    );
   }
 }
