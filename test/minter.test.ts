@@ -18,7 +18,7 @@ import {
 import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
 import { expect } from "chai";
 
-describe.skip("Idoru minter Contract", function () {
+describe("Idoru minter Contract", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -149,15 +149,16 @@ describe.skip("Idoru minter Contract", function () {
     const transferAmount = ethers.BigNumber.from(10).pow(
       ethers.BigNumber.from(2).add(await usdc.decimals())
     );
+    console.log(await idoruMinter.getIdoruAmountOut(transferAmount));
     const amountOut = await idoruMinter.getIdoruAmountOut(transferAmount);
 
-    console.log(await idoruMinter.getIdoruAmountOut(transferAmount));
+    //console.log(await idoruMinter.getIdoruAmountOut(transferAmount));
 
     const idoruMinter_addr1 = idoruMinter.connect(addr1);
 
     console.log(
-      (await token.balanceOf(addr1.address)).div(await token.decimals())
-    );
+      (await token.balanceOf(addr1.address)).div(ethers.BigNumber.from(10).pow(await token.decimals()))
+      );
 
     expect(await token.balanceOf(addr1.address)).to.be.equal(0);
 
@@ -171,9 +172,10 @@ describe.skip("Idoru minter Contract", function () {
     expect(await usdc.balanceOf(bank.address)).to.be.equal(transferAmount);
 
     console.log(
-      (await token.balanceOf(addr1.address)).div(await token.decimals())
+      (await token.balanceOf(addr1.address)).div(ethers.BigNumber.from(10).pow(await token.decimals()))
     );
-    console.log(amountOut.div(await token.decimals()));
+    console.log(amountOut.div(ethers.BigNumber.from(10).pow(await token.decimals()))
+    );
     expect(await token.balanceOf(addr1.address)).not.to.be.equal(0);
   });
 });
