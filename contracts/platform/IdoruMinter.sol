@@ -44,7 +44,7 @@ contract IdoruMinter is Ownable {
     bankAddress = _bank;
   }
 
-  uint256 internal rewardPoints = 10_100; // 100 point = 1% but its for multiplying so =10_000 (*=1+diff)
+  uint256 internal rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
   uint256 internal fixedPricePresale = 1_000_000; // price = 1000_000* dollar/token (so higher price means more valuable token)
 
   /**
@@ -85,7 +85,7 @@ contract IdoruMinter is Ownable {
   {
     require(_amountIn > 0, "Negative amount in");
     require(fixedPricePresale > 0, "Negative fixed price");
-    _amountOut = _amountIn.mul(1_000_000) / (fixedPricePresale);
+    _amountOut = _amountIn*1_000_000/fixedPricePresale;
   }
 
   function setUniswapFactoryAddress(address _addr) public onlyOwner {
@@ -125,7 +125,7 @@ contract IdoruMinter is Ownable {
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
-    _amountOut = (_amountIn.mul(res1) / (res0)).mul(rewardPoints) / (10_000);
+    _amountOut = (_amountIn * res1 / res0) * rewardPoints / 10_000;  // sol>0.8 handle overflows
     // _amountOut = UniswapV2Library.getAmountOut(_amountIn, res0, res1); // Old version
   }
 
@@ -146,7 +146,7 @@ contract IdoruMinter is Ownable {
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
-    _amountIn = (_amountOut.mul(res0) / res1).mul(10_000) / rewardPoints;
+    _amountIn = (_amountOut * res0 / res1)  * 10_000 / rewardPoints;
     // _amountIn = UniswapV2Library.getAmountIn(_amountOut, res0, res1);  // Old version
   }
 

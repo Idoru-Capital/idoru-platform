@@ -12,7 +12,7 @@ import {
   ERC20Bank__factory,
 } from "../typechain";
 
-describe("Idoru token", function () {
+describe.skip("Idoru token", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -527,7 +527,7 @@ describe("Idoru token", function () {
     await token_addr2.delegate(addr2.address);
   });
 
-  it("DividendsPerHoldingValue 1", async function () {
+  it.skip("DividendsPerHoldingValue 1", async function () {
     // Check if DividendsPerHoldingValue is working properly
 
     const token_addr1 = token.connect(addr1);
@@ -556,7 +556,7 @@ describe("Idoru token", function () {
 
   });
 
-  it("DividendsPerHoldingValue 2", async function () {
+  it.skip("DividendsPerHoldingValue 2", async function () {
     // Check if DividendsPerHoldingValue is working properly
 
     const token_addr1 = token.connect(addr1);
