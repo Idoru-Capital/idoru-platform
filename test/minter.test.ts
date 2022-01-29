@@ -18,7 +18,7 @@ import {
 import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
 import { expect } from "chai";
 
-describe("Idoru minter Contract", function () {
+describe.skip("Idoru minter Contract", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -149,8 +149,13 @@ describe("Idoru minter Contract", function () {
     const transferAmount = ethers.BigNumber.from(10).pow(
       ethers.BigNumber.from(2).add(await usdc.decimals())
     );
-    console.log(await idoruMinter.getIdoruAmountOut(transferAmount));
-    const amountOut = await idoruMinter.getIdoruAmountOut(transferAmount);
+    const wantedIdruTokens = ethers.BigNumber.from(10).pow(
+      ethers.BigNumber.from(2).add(await token.decimals())
+    );
+
+    console.log(await idoruMinter.getIdoruAmountIn(wantedIdruTokens));
+    console.log(await idoruMinter.getIdoruPresaleAmountOut(transferAmount));
+    const amountOut = await idoruMinter.getIdoruPresaleAmountOut(transferAmount);
 
     //console.log(await idoruMinter.getIdoruAmountOut(transferAmount));
 
