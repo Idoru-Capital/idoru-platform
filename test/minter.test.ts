@@ -18,7 +18,7 @@ import {
 import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
 import { expect } from "chai";
 
-describe.skip("Idoru minter Contract", function () {
+describe.only("Idoru minter Contract", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -88,7 +88,7 @@ describe.skip("Idoru minter Contract", function () {
   /**
    * Test Idoru Minter contract
    */
-  it.only("Test Idoru Minter contract", async function () {
+  it("Test Idoru Minter contract", async function () {
     const token_1 = token.connect(addr1);
 
     //? add liqudity
@@ -155,15 +155,19 @@ describe.skip("Idoru minter Contract", function () {
 
     console.log(await idoruMinter.getIdoruAmountIn(wantedIdruTokens));
     console.log(await idoruMinter.getIdoruPresaleAmountOut(transferAmount));
-    const amountOut = await idoruMinter.getIdoruPresaleAmountOut(transferAmount);
+    const amountOut = await idoruMinter.getIdoruPresaleAmountOut(
+      transferAmount
+    );
 
     //console.log(await idoruMinter.getIdoruAmountOut(transferAmount));
 
     const idoruMinter_addr1 = idoruMinter.connect(addr1);
 
     console.log(
-      (await token.balanceOf(addr1.address)).div(ethers.BigNumber.from(10).pow(await token.decimals()))
-      );
+      (await token.balanceOf(addr1.address)).div(
+        ethers.BigNumber.from(10).pow(await token.decimals())
+      )
+    );
 
     expect(await token.balanceOf(addr1.address)).to.be.equal(0);
 
@@ -177,9 +181,12 @@ describe.skip("Idoru minter Contract", function () {
     expect(await usdc.balanceOf(bank.address)).to.be.equal(transferAmount);
 
     console.log(
-      (await token.balanceOf(addr1.address)).div(ethers.BigNumber.from(10).pow(await token.decimals()))
+      (await token.balanceOf(addr1.address)).div(
+        ethers.BigNumber.from(10).pow(await token.decimals())
+      )
     );
-    console.log(amountOut.div(ethers.BigNumber.from(10).pow(await token.decimals()))
+    console.log(
+      amountOut.div(ethers.BigNumber.from(10).pow(await token.decimals()))
     );
     expect(await token.balanceOf(addr1.address)).not.to.be.equal(0);
   });
