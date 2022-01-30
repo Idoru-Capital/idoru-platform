@@ -1,6 +1,6 @@
 {
   "license": "UNLICENSED",
-  "name": "hardhat-project",
+  "name": "idoru-platform",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test --network hardhat",

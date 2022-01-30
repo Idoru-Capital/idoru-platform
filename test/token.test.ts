@@ -59,12 +59,13 @@ describe("Idoru token", function () {
     await expect(token.mint(addr1.address, 100)).to.be.reverted;
   });
 
-  it.skip("Should whitelist", async function () {
+  it("Should whitelist", async function () {
     //! Default owner gets all the roles
     // const wizard = await ROLES_NAMES.WIZARD();
     // console.log(wizard);
     // await token.grantRole(wizard, owner.address);
-  
+    // console.log(await token.hasRole(wizard, owner.address));
+
     expect(await token.isVerified(addr1.address)).to.be.false;
     expect(await token.isVerified(owner.address)).to.be.false;
     await token.verifyAddress(addr1.address);
@@ -73,10 +74,10 @@ describe("Idoru token", function () {
     expect(await token.isVerified(owner.address)).to.be.true;
     await token.unVerifyAddress(addr1.address);
     expect(await token.isVerified(addr1.address)).to.be.false;
-  
+
     const token_addr1 = token.connect(addr1);
     // await token_addr1.verifyAddress(addr1.address);
-    await token_addr1.unVerifyAddress(addr1.address);
+    expect(token_addr1.unVerifyAddress(addr1.address)).to.be.reverted;
   });
 
   it("minHoldingValue; normal 1", async function () {
@@ -129,7 +130,7 @@ describe("Idoru token", function () {
     ).to.be.true;
   });
 
-  it.only("minHoldingValue; no checkpoints", async function () {
+  it("minHoldingValue; no checkpoints", async function () {
     // MinHoldingValue; expect to be reverted "No checkpoints"
 
     const token_addr1 = token.connect(addr1);
@@ -137,7 +138,9 @@ describe("Idoru token", function () {
     await token_addr1.delegate(addr1.address);
 
     expect(
-      (await token.minHoldingValue(addr1.address)).lt(initial_balance.div(initial_balance)) // greater than 0
+      (await token.minHoldingValue(addr1.address)).lt(
+        initial_balance.div(initial_balance)
+      ) // greater than 0
     ).to.be.true; // Enough blocks after delegation
   });
 
@@ -295,7 +298,6 @@ describe("Idoru token", function () {
       (await token.minHoldingValue(addr2.address)) > initial_balance.div(10)
     ).to.be.true;
   });
-
 
   it.skip("subscribeDividends, already subscribed", async function () {
     // Potential collision between subscribeDividends and delegate; expect already subscribed revert

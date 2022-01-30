@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text } from "ink";
+import { Text, render } from "ink";
 
 export const Counter = () => {
   const [counter, setCounter] = useState(0);
