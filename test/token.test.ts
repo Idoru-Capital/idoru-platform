@@ -84,22 +84,55 @@ describe.only("Idoru token", function () {
 
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
-    await token.changeMinHoldingBlocks(10);
+    await token.changeMinHoldingBlocks(5);
     await token_addr1.delegate(addr1.address);
     await token.transfer(addr1.address, initial_balance.div(10));
     // initial neutral blocks
     const M = 10;
     for (let index = 0; index < M; index++) {
-      await token.transfer(addr2.address, initial_balance.div(M).div(50));
+      await token.transfer(addr1.address, initial_balance.div(M).div(100));
     }
-    //console.log(await token.minHoldingValue(addr1.address));
-    //console.log(await initial_balance.div(50));
+    await token_addr1.transfer(addr2.address, initial_balance.div(10));
+
     expect(
       (await token.minHoldingValue(addr1.address)).gt(initial_balance.div(50))
-    ).to.be.true;
+    ).to.be.false;
   });
 
-  it("minHoldingValue; normal 2", async function () {
+  it.only("minHoldingValue; general test", async function () {
+    // MinHoldingValue function check
+
+    const token_addr1 = token.connect(addr1);
+    const initial_balance = await token.balanceOf(owner.address);
+    await token.changeMinHoldingBlocks(5);
+    await token_addr1.delegate(addr1.address);
+
+    const N = 5; // Initial neutral blocks
+    for (let index = 0; index < N; index++) {
+      await token.transfer(addr2.address, initial_balance.div(N).div(1000));
+    }
+
+    await token.transfer(addr1.address, initial_balance.div(10));
+    
+    const M = 5; // Neutral blocks
+    for (let index = 0; index < M; index++) {
+      await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    }
+
+    // sell funds so should not get dividends
+    await token_addr1.transfer(addr2.address, initial_balance.div(10));
+
+    //await token.transfer(addr2.address, initial_balance.div(50));
+    // for (let index = 0; index < M; index++) {
+    //   await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    // }
+
+    expect(
+      (await token.minHoldingValue(addr1.address)).gt(initial_balance.div(50))
+    ).to.be.false;
+  });
+
+  it.skip("minHoldingValue; normal 2", async function () {
     // MinHoldingValue function check
 
     const token_addr1 = token.connect(addr1);
@@ -108,9 +141,10 @@ describe.only("Idoru token", function () {
     await token_addr1.delegate(addr1.address);
     await token.transfer(addr1.address, initial_balance.div(10));
 
-    expect(
-      (await token.minHoldingValue(addr1.address)).lt(initial_balance.div(50))
-    ).to.be.true; // Not enough blocks
+    //expect(
+    //  (await token.minHoldingValue(addr1.address)).lt(initial_balance.div(50))
+    //).to.be.true; // Not enough blocks
+
     // Neutral blocks
     const M = 10;
     for (let index = 0; index < M; index++) {
@@ -129,7 +163,7 @@ describe.only("Idoru token", function () {
     ).to.be.true;
   });
 
-  it("minHoldingValue; no checkpoints", async function () {
+  it.skip("minHoldingValue; no checkpoints", async function () {
     // MinHoldingValue; expect to be reverted "No checkpoints"
 
     const token_addr1 = token.connect(addr1);
@@ -141,7 +175,7 @@ describe.only("Idoru token", function () {
     ).to.be.true; // Enough blocks after delegation
   });
 
-  it("minHoldingValue, late delegation", async function () {
+  it.skip("minHoldingValue, late delegation", async function () {
     // MinHoldingValue function check for late delegation
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
@@ -164,7 +198,7 @@ describe.only("Idoru token", function () {
     ).to.be.true; // Enough blocks after delegation
   });
 
-  it("MinHoldingValue: exactly enough blocks", async function () {
+  it.skip("MinHoldingValue: exactly enough blocks", async function () {
     // 2 tests: 1 block short, exactly enough
 
     const token_addr1 = token.connect(addr1);
@@ -190,7 +224,7 @@ describe.only("Idoru token", function () {
     ).to.be.true;
   });
 
-  it("MinHoldingValue: changing MinHoldingBlocks", async function () {
+  it.skip("MinHoldingValue: changing MinHoldingBlocks", async function () {
     // Test edge cases when changin required holding time
 
     const token_addr1 = token.connect(addr1);
