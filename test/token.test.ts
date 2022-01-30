@@ -12,7 +12,7 @@ import {
   ERC20Bank__factory,
 } from "../typechain";
 
-describe("Idoru token", function () {
+describe.only("Idoru token", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;

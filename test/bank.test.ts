@@ -32,7 +32,7 @@ describe.skip("Bank", function () {
     await bank.deployed();
   });
 
-  it("Test bank", async function () {
+  it.skip("Test bank", async function () {
     const bank_non_owner = bank.connect(addr1);
 
     const bankAddress = bank.address;
