@@ -100,7 +100,7 @@ describe("Idoru token", function () {
     ).to.be.false;
   });
 
-  it.only("minHoldingValue; general test", async function () {
+  it("minHoldingValue; general test", async function () {
     // MinHoldingValue function check
 
     const token_addr1 = token.connect(addr1);
@@ -134,7 +134,7 @@ describe("Idoru token", function () {
     ).to.be.false;
   });
 
-  it.skip("minHoldingValue; normal 2", async function () {
+  it("minHoldingValue; normal 2", async function () {
     // MinHoldingValue function check
 
     const token_addr1 = token.connect(addr1);
@@ -165,21 +165,20 @@ describe("Idoru token", function () {
     ).to.be.true;
   });
 
-  it.skip("minHoldingValue; no checkpoints", async function () {
+  it.only("minHoldingValue; no checkpoints", async function () {
     // MinHoldingValue; expect to be reverted "No checkpoints"
 
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
+    //await token.transfer(addr1.address, initial_balance.div(10));
     await token_addr1.delegate(addr1.address);
-
+    await token.changeMinHoldingBlocks(10);
     expect(
-      (await token.minHoldingValue(addr1.address)).lt(
-        initial_balance.div(initial_balance)
-      ) // greater than 0
-    ).to.be.true; // Enough blocks after delegation
+      (await token.minHoldingValue(addr1.address)).gt(initial_balance.div(11))
+    ).to.be.false; // Too late delegation
   });
 
-  it.skip("minHoldingValue, late delegation", async function () {
+  it.only("minHoldingValue, late delegation", async function () {
     // MinHoldingValue function check for late delegation
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
@@ -191,9 +190,10 @@ describe("Idoru token", function () {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
     await token_addr1.delegate(addr1.address);
-    expect(
-      (await token.minHoldingValue(addr1.address)).gt(initial_balance.div(11))
-    ).to.be.false; // Too late delegation
+    console.log(await token.minHoldingValue(addr1.address))
+    //expect(
+    //  (await token.minHoldingValue(addr1.address)).lt(initial_balance.div(initial_balance))
+    //).to.be.true; // Too late delegation
     for (let index = 0; index < M; index++) {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
