@@ -30,9 +30,9 @@ contract IdoruMinter is Ownable {
   mapping(address => bool) private supportedStablecoins;
   address private bankAddress;
 
-  uint256 internal rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
-  uint256 internal fixedPricePresale = 1_000_000 * 1_000_000_000_000_000_000 / 1000_000; // price = 1000_000* token/ dollar (so higher price means less valuable token)
-  //1_000_000_000_000_000_000 -> IIdoru.decimals() !!
+  uint256 internal rewardPoints;
+  uint256 internal fixedPricePresale;
+
   constructor(
     address _uniswapFactory,
     address _idoru,
@@ -44,6 +44,11 @@ contract IdoruMinter is Ownable {
     idoruStablePoolAddress = _stablecoin;
     supportedStablecoins[_stablecoin] = true;
     bankAddress = _bank;
+
+    rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
+    fixedPricePresale =
+      (1_000_000 * uint256(IIdoru(idoruAddress).decimals())) /
+      1000_000; // price = 1000_000* token/ dollar (so higher price means less valuable token)
   }
 
   /**
@@ -73,7 +78,9 @@ contract IdoruMinter is Ownable {
    */
   function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
     require(_fixedPricePresale > 0, "Negative presale price");
-    fixedPricePresale = _fixedPricePresale* 1_000_000_000_000_000_000 / 1000_000; //1_000_000_000_000_000_000 -> IIdoru.decimals() !!
+    fixedPricePresale =
+      (_fixedPricePresale * 1_000_000_000_000_000_000) /
+      1000_000; //1_000_000_000_000_000_000 -> IIdoru.decimals() !!
   }
 
   /**
@@ -123,7 +130,7 @@ contract IdoruMinter is Ownable {
   {
     require(_amountIn > 0, "Negative amount in");
     require(fixedPricePresale > 0, "Negative fixed price");
-    _amountOut = _amountIn * fixedPricePresale / 1_000_000;
+    _amountOut = (_amountIn * fixedPricePresale) / 1_000_000;
   }
 
   /**
