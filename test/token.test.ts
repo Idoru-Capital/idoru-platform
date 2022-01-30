@@ -12,7 +12,7 @@ import {
   ERC20Bank__factory,
 } from "../typechain";
 
-describe("Idoru token", function () {
+describe.only("Idoru token", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -129,7 +129,7 @@ describe("Idoru token", function () {
     ).to.be.true;
   });
 
-  it.only("minHoldingValue; no checkpoints", async function () {
+  it("minHoldingValue; no checkpoints", async function () {
     // MinHoldingValue; expect to be reverted "No checkpoints"
 
     const token_addr1 = token.connect(addr1);
