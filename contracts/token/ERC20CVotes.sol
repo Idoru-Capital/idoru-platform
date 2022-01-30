@@ -106,9 +106,9 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
       : 0;
     uint256 minimum;
     minimum = getPastVotes(_addr, startBlock); // initialize min to last checkpoin
-    //for (uint32 i = numCheckpoints(_addr); checkpoints(_addr, i - 1).fromBlock > startBlock; i--) {
-    //  minimum = uint256(Math.min(minimum, checkpoints(_addr, i - 1).votes));
-    //}
+    for (uint32 i = numCheckpoints(_addr); checkpoints(_addr, i - 1).fromBlock > startBlock; i--) {
+      minimum = uint256(Math.min(minimum, checkpoints(_addr, i - 1).votes));
+    }
     return minimum;
   }
 

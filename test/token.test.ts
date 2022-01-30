@@ -105,28 +105,29 @@ describe("Idoru token", function () {
 
     const token_addr1 = token.connect(addr1);
     const initial_balance = await token.balanceOf(owner.address);
-    await token.changeMinHoldingBlocks(5);
+    await token.changeMinHoldingBlocks(10);
     await token_addr1.delegate(addr1.address);
 
-    const N = 5; // Initial neutral blocks
+    const N = 11; // Initial neutral blocks
     for (let index = 0; index < N; index++) {
       await token.transfer(addr2.address, initial_balance.div(N).div(1000));
     }
 
     await token.transfer(addr1.address, initial_balance.div(10));
     
-    const M = 5; // Neutral blocks
+    const M = 10; // Neutral blocks
     for (let index = 0; index < M; index++) {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
     }
 
     // sell funds so should not get dividends
     await token_addr1.transfer(addr2.address, initial_balance.div(10));
+    await token.transfer(addr1.address, initial_balance.div(10));
 
-    //await token.transfer(addr2.address, initial_balance.div(50));
-    // for (let index = 0; index < M; index++) {
-    //   await token.transfer(addr2.address, initial_balance.div(M).div(50));
-    // }
+    // await token.transfer(addr2.address, initial_balance.div(50));
+    //  for (let index = 0; index < M; index++) {
+    //    await token.transfer(addr2.address, initial_balance.div(M).div(50));
+    //  }
 
     expect(
       (await token.minHoldingValue(addr1.address)).gt(initial_balance.div(50))
