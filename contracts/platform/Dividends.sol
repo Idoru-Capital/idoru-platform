@@ -31,12 +31,10 @@ contract IdoruDividends is Context, Ownable {
   address private _stablecoinToken;
   address private _idoruToken;
 
-  uint256 private _totalAmount;
-  uint256 private _totalReleased;
-
-  mapping(address => uint256) private _dividendAmounts;
-  mapping(address => uint256) private _released;
-
+  uint256[] internal dividendBlocks;
+  mapping (address => uint256) internal userLatestBlock; // latest block at which user has withdrawn dividends
+  uint256[] internal dividendsAmounts;
+  uint256[] internal dividendsPaid;
   /**
    *Set the address of the stablecoin in which we will distribute dividends.
    */
@@ -49,154 +47,65 @@ contract IdoruDividends is Context, Ownable {
    * Function which should actually be called to redistribute dividends.
    *TODO probably make this only owner, and make write some safemath checks
    */
-  function distributeDividends(uint256 amount_) public onlyOwner {
-    require(amount_ > 0, "Amount null");
+  
+    function payDividends(uint256 blockPay, uint256 amount)
+    public
+    onlyOwner{
+    dividendBlocks.push(blockPay);
+    dividendsAmounts.push(amount);
+    dividendsPaid.push(0);
+}
 
-    address[] memory payees_ = IIdoru(_idoruToken).getDelegateAddresses();
-    uint256[] memory shares_ = IIdoru(_idoruToken).getDelegateDividendsAmounts(
-      amount_
-    );
-
-    distributeDividendsAddress(payees_, shares_);
-
-    SafeERC20.safeTransferFrom(
-      IERC20(_stablecoinToken),
-      msg.sender,
-      address(this),
-      amount_
-    );
-  }
-
-  /**
-   * Distribute _stablecoinToken tokens to payees according to their dividend amounts.
-
-   * @dev Creates an instance of `PaymentSplitter` where each account in `payees` is assigned the number of shares at
-   * the matching position in the `shares` array.
-   *
-   * All addresses in `payees` must be non-zero. Both arrays must have the same non-zero length, and there must be no
-   * duplicates in `payees`.
-   */
-  function distributeDividendsAddress(
-    address[] memory payees,
-    uint256[] memory shares_
-  ) private {
-    require(
-      payees.length == shares_.length,
-      "payees and shares length mismatch"
-    );
-    require(payees.length > 0, "PaymentSplitter: no payees");
-
-    for (uint256 i = 0; i < payees.length; i++) {
-      _addPayee(payees[i], shares_[i]);
+  function deleteDividends(uint256 blockDelete)
+    public
+    onlyOwner returns (uint256){
+    //require(blockDelete > 0, "negative block");
+    // delete block  in dividendBlocks
+    uint indexOfBlock;
+    bool doesExist = false;
+    for (uint i=0; i <= dividendBlocks.length; i++) {
+        if (blockDelete == dividendBlocks[i]) {
+          indexOfBlock = i;
+          doesExist = true;
     }
-  }
+    }
+    require(doesExist, "block not in dividendBlocks");
+    delete dividendBlocks[indexOfBlock];  // but now we leave gap (just set to 0)! we want this becasue indexes  in lists still coresponde to same dividends
+    uint256 remaining = dividendsAmounts[indexOfBlock];
+    dividendsPaid[indexOfBlock] = dividendsPaid[indexOfBlock] + remaining;
+    dividendsAmounts[indexOfBlock] = 0;
+    return remaining;
+    // set dividendsPait do dividendAmounts?
+  }  
 
-  /**
-   * @dev The Ether received will be logged with {PaymentReceived} events. Note that these events are not fully
-   * reliable: it's possible for a contract to receive Ether without triggering this function. This only affects the
-   * reliability of the events, and not the actual splitting of Ether.
-   *
-   * To learn more about this see the Solidity documentation for
-   * https://solidity.readthedocs.io/en/latest/contracts.html#fallback-function[fallback
-   * functions].
-   */
-  receive() external payable virtual {
-    emit PaymentReceived(_msgSender(), msg.value);
-  }
-
-  /**
-   * @dev Getter for the total amount of tokens held by payees.
-   */
-  function totalAmount() public view returns (uint256) {
-    return _totalAmount;
-  }
-
-  /**
-   * @dev Getter for the total amount of Ether already released.
-   */
-  function totalReleased() public view returns (uint256) {
-    return _totalReleased;
-  }
-
-  /**
-   * @dev Getter for the amount of dividend held by an account.
-   */
-  function dividendAmount(address account) public view returns (uint256) {
-    return _dividendAmounts[account];
-  }
-
-  /**
-   * @dev Getter for the amount of Ether already released to a payee.
-   */
-  function released(address account) public view returns (uint256) {
-    return _released[account];
-  }
-
-  /**
-   * @dev Getter for amount of dividends to be released
-   */
-  function pendingDividends(address account) public view returns (uint256) {
-    return dividendAmount(account) - released(account);
-  }
-
-  /**
-   * @dev Triggers a transfer to `account` of the amount of `token` tokens they are owed, according to their
-   * percentage of the total shares and their previous withdrawals. `token` must be the address of an IERC20
-   * contract.
-   */
-  function release(address account) public virtual {
-    require(
-      _dividendAmounts[account] > 0,
-      "PaymentSplitter: account has no shares"
-    );
-
-    IERC20 token = IERC20(_stablecoinToken);
-
-    // uint256 totalReceived = token.balanceOf(address(this)) +
-    //   totalReleased(token);
-    uint256 payment = _pendingPayment(
-      account,
-      //   totalReceived,
-      released(account)
-    );
-
-    require(payment != 0, "PaymentSplitter: account is not due payment");
-
-    _released[account] += payment;
-    _totalReleased += payment;
-
-    SafeERC20.safeTransfer(token, account, payment);
-    emit ERC20PaymentReleased(token, account, payment);
-  }
-
-  /**
-   * @dev internal logic for computing the pending payment of an `account` given the token historical balances and
-   * already released amounts.
-   */
-  function _pendingPayment(address account, uint256 alreadyReleased)
-    private
-    view
-    returns (uint256)
+  function withdrawDividendsBlock(uint256 blockWithdraw)
+    public view returns (uint256)
   {
-    return _dividendAmounts[account] - alreadyReleased;
-  }
-
-  /**
-   * @dev Add a new payee to the contract.
-   * @param account The address of the payee to add.
-   * @param amount_ The amount of ERC20 token owned by the payee.
-   */
-  function _addPayee(address account, uint256 amount_) private {
-    require(account != address(0), "PaymentSplitter: zero address");
-    require(amount_ > 0, "PaymentSplitter: amounts are 0");
-
-    // NOT SURE IF THIS IS THE RIGHT WAY TO DO THIS
-    if (_dividendAmounts[account] > 0) {
-      _dividendAmounts[account] = _dividendAmounts[account] + amount_;
-    } else {
-      _dividendAmounts[account] = amount_;
+    uint pastTotalSupply = IIdoru(idoruAddress).getPastTotalSupply(blockWithdraw);  // ?
+    uint toWithdraw = (dividendsAmounts[blockWithdraw] + dividendsPaid[blockWithdraw])*IIdoru(idoruAddress).MinHoldingValue(msg.sender, blockWithdraw)) / pastTotalSupply;
+    require(dividendsAmounts[blockWithdraw]> toWithdraw, "Not enough money");
+    return toWithdraw;
     }
-    _totalAmount = _totalAmount + amount_;
-    emit PayeeAdded(account, amount_);
-  }
+
+
+  function withdrawAllDividends()
+    private returns (uint256)
+  {
+    require(dividendBlocks.length > 0, "No blocks with dividends");
+    uint withdrawAmount;
+    if (userLatestBlock[msg.sender] == 0){ // hasnt claimed yet
+      userLatestBlock[msg.sender] = dividendBlocks[0];
+    }
+    for (uint i=dividendBlocks.length; i > 0; i--) {
+      if (dividendBlocks[i] <= userLatestBlock[msg.sender]){
+        break;
+      }
+      uint amountBlock = withdrawDividendsBlock(dividendBlocks[i]);
+      withdrawAmount += amountBlock;
+      dividendsPaid[i] += amountBlock;
+      dividendsAmounts[i] -= amountBlock;
+    }
+    userLatestBlock[msg.sender] = dividendBlocks[dividendBlocks.length - 1];
+    return withdrawAmount;
+}
 }
