@@ -13,6 +13,8 @@ import {
   Idoru__factory,
   RoleNames,
   RoleNames__factory,
+  IdoruStableCoin,
+  IdoruStableCoin__factory,
 } from "../typechain";
 
 import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
@@ -20,6 +22,8 @@ import { expect } from "chai";
 
 describe.only("Idoru minter Contract", function () {
   let token: Idoru;
+  let idoruStablecoin: IdoruStableCoin;
+
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -69,12 +73,16 @@ describe.only("Idoru minter Contract", function () {
     bank = await bank_factory.deploy();
     await bank.deployed();
 
+    const IdoruStablecoinFactory = new IdoruStableCoin__factory(owner);
+    idoruStablecoin = await IdoruStablecoinFactory.deploy();
+    await idoruStablecoin.deployed();
+
     // deploy Idoru Minter contract
     idoruMinter = await new IdoruMinter__factory(owner).deploy(
       uniswap.FACTORY_ADDRESS,
       token.address,
       USDC,
-      ethers.constants.AddressZero,
+      idoruStablecoin.address,
       bank.address
     );
     await idoruMinter.deployed();
@@ -87,9 +95,123 @@ describe.only("Idoru minter Contract", function () {
   });
 
   /**
+   * Test Idoru Minter presale with IdoruStablecoin
+   */
+  it("idoruMinter presale with IdoruStablecoin", async function () {
+    const idoruStablecoin_1 = idoruStablecoin.connect(addr1);
+    const idoruMinter_1 = idoruMinter.connect(addr1);
+
+    // lets give him some tokens
+    expect((await idoruStablecoin_1.balanceOf(addr1.address)).isZero()).to.be
+      .true;
+    await idoruStablecoin.mint(
+      addr1.address,
+      ethers.BigNumber.from(10).pow(3 + (await idoruStablecoin.decimals())) // lets mint him 1_000 tokens
+    );
+    expect((await idoruStablecoin_1.balanceOf(addr1.address)).isZero()).to.be
+      .false;
+
+    // approve minter on stalblecoin
+    await idoruStablecoin_1.approve(
+      idoruMinter.address,
+      ethers.constants.MaxUint256
+    );
+
+    expect((await token.balanceOf(addr1.address)).isZero()).to.be.true;
+
+    const transferAmount = await idoruStablecoin.balanceOf(addr1.address);
+
+    // user is not KYCed yet
+    await expect(
+      idoruMinter_1.mintIdoruPresale(transferAmount, idoruStablecoin.address)
+    ).to.be.reverted;
+
+    await token.verifyAddress(addr1.address);
+
+    // mint too many tokens -> have to rise the presale limit
+    await expect(
+      idoruMinter_1.mintIdoruPresale(transferAmount, idoruStablecoin.address)
+    ).to.be.reverted;
+
+    await idoruMinter.setPresaleTokensToMint(
+      ethers.BigNumber.from(10).pow(6 + (await idoruStablecoin.decimals())) // we can mint 1 million tokens
+    );
+
+    await idoruMinter_1.mintIdoruPresale(
+      transferAmount,
+      idoruStablecoin.address
+    );
+
+    // bank recieves the funds
+    expect(await idoruStablecoin_1.balanceOf(bank.address)).to.be.equal(
+      transferAmount
+    );
+    console.log(await token.balanceOf(addr1.address));
+    expect(
+      (await token.balanceOf(addr1.address)).lt(
+        ethers.BigNumber.from(10).pow(3 + (await token.decimals()))
+      )
+    ).to.be.true;
+  });
+
+  /**
+   * token not supported test
+   */
+  it("token not supported test", async function () {
+    // deploy Idoru Minter contract
+    idoruMinter = await new IdoruMinter__factory(owner).deploy(
+      uniswap.FACTORY_ADDRESS,
+      token.address,
+      USDC,
+      ethers.constants.AddressZero,
+      bank.address
+    );
+    await idoruMinter.deployed();
+
+    const idoruStablecoin_1 = idoruStablecoin.connect(addr1);
+    const idoruMinter_1 = idoruMinter.connect(addr1);
+
+    // lets give him some tokens
+    expect((await idoruStablecoin_1.balanceOf(addr1.address)).isZero()).to.be
+      .true;
+    await idoruStablecoin.mint(
+      addr1.address,
+      ethers.BigNumber.from(10).pow(3 + (await idoruStablecoin.decimals())) // lets mint him 1_000 tokens
+    );
+    expect((await idoruStablecoin_1.balanceOf(addr1.address)).isZero()).to.be
+      .false;
+
+    // approve minter on stalblecoin
+    await idoruStablecoin_1.approve(
+      idoruMinter.address,
+      ethers.constants.MaxUint256
+    );
+
+    expect((await token.balanceOf(addr1.address)).isZero()).to.be.true;
+
+    // user is not KYCed yet
+    await expect(
+      idoruMinter_1.mintIdoruPresale(
+        await idoruStablecoin.balanceOf(addr1.address),
+        idoruStablecoin.address
+      )
+    ).to.be.reverted;
+
+    await token.verifyAddress(addr1.address);
+
+    // token is not supported -> we did not deploy with IdoruStable in constructor!
+    await expect(
+      idoruMinter_1.mintIdoruPresale(
+        await idoruStablecoin.balanceOf(addr1.address),
+        idoruStablecoin.address
+      )
+    ).to.be.revertedWith("Token not supported");
+  });
+
+  /**
    * Test Idoru Minter contract
    */
-  it("Test Idoru Minter contract", async function () {
+  it("Test Idoru Minter contract on Uniswap", async function () {
     const token_1 = token.connect(addr1);
 
     //? add liqudity
@@ -156,6 +278,7 @@ describe.only("Idoru minter Contract", function () {
 
     console.log(await idoruMinter.getIdoruAmountIn(wantedIdruTokens));
     console.log(await idoruMinter.getIdoruPresaleAmountOut(transferAmount));
+
     const amountOut = await idoruMinter.getIdoruPresaleAmountOut(
       transferAmount
     );
@@ -176,7 +299,13 @@ describe.only("Idoru minter Contract", function () {
       .connect(addr1)
       .approve(idoruMinter.address, transferAmount.mul(100));
 
-    // await idoruMinter_addr1.setUniswapFactoryAddress(uniswap.FACTORY_ADDRESS);
+    await expect(idoruMinter_addr1.swapStablecoinIdoru(transferAmount, USDC)).to
+      .be.reverted;
+
+    await idoruMinter.setAvailableTokensToMint(
+      ethers.BigNumber.from(10).pow((await token.decimals()) + 6)
+    ); // we can mint 1 million tokens
+
     await idoruMinter_addr1.swapStablecoinIdoru(transferAmount, USDC);
 
     expect(await usdc.balanceOf(bank.address)).to.be.equal(transferAmount);

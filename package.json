@@ -4,6 +4,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test --network hardhat",
+    "test": "hardhat test --network hardhat",
     "deploy": "npx hardhat run scripts/deploy.ts --network bsctestnet",
     "test:onchain": "hardhat run scripts/onchain-token.ts --network bsctestnet",
     "cli": "ts-node cli/index.ts"

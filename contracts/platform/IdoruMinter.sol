@@ -49,7 +49,7 @@ contract IdoruMinter is Ownable {
     rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
     fixedPricePresale =
       (1_000_000 * uint256(IIdoru(idoruAddress).decimals())) /
-      1000_000; // price = 1000_000* token/ dollar (so higher price means less valuable token)
+      1_000_000; // price = 1000_000* token/ dollar (so higher price means less valuable token)
   }
 
   /**
@@ -204,7 +204,7 @@ contract IdoruMinter is Ownable {
   {
     require(
       _stablecoin == usdStableCoin || _stablecoin == usdIdoruCoin,
-      "Coin not supported"
+      "Token not supported"
     );
 
     IERC20 stableERC20 = IERC20(_stablecoin);
@@ -236,7 +236,7 @@ contract IdoruMinter is Ownable {
   {
     require(
       _stablecoin == usdStableCoin || _stablecoin == usdIdoruCoin,
-      "Coin not supported"
+      "Token not supported"
     );
 
     IERC20 stableERC20 = IERC20(_stablecoin);

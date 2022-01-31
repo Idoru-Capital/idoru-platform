@@ -12,7 +12,7 @@ import {
   ERC20Bank__factory,
 } from "../typechain";
 
-describe("Idoru token", function () {
+describe.skip("Idoru token", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -60,12 +60,6 @@ describe("Idoru token", function () {
   });
 
   it("Should whitelist", async function () {
-    //! Default owner gets all the roles
-    // const wizard = await ROLES_NAMES.WIZARD();
-    // console.log(wizard);
-    // await token.grantRole(wizard, owner.address);
-    // console.log(await token.hasRole(wizard, owner.address));
-
     expect(await token.isVerified(addr1.address)).to.be.false;
     expect(await token.isVerified(owner.address)).to.be.false;
     await token.verifyAddress(addr1.address);
@@ -76,7 +70,6 @@ describe("Idoru token", function () {
     expect(await token.isVerified(addr1.address)).to.be.false;
 
     const token_addr1 = token.connect(addr1);
-    // await token_addr1.verifyAddress(addr1.address);
     expect(token_addr1.unVerifyAddress(addr1.address)).to.be.reverted;
   });
 

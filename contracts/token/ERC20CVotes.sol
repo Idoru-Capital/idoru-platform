@@ -33,64 +33,9 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
     minHoldingBlocks = _minHoldingBlocks;
   }
 
-  /**
-   * @dev Get all delegate addresses
-   */
-  function getDelegateAddresses() public view returns (address[] memory) {
-    return delegateAddresses;
-  }
-
-  /**
-   * @dev Go throught all delegate addresses and get their calculated dividends
-   */
-  function getDelegateDividendsAmounts(uint256 dividendAmount)
-    public
-    view
-    returns (uint256[] memory)
-  {
-    uint256 dividendPerHoldingValue = dividendsPerHoldingValue(dividendAmount);
-
-    // loop through all delegate addresses
-    uint256[] memory dividends = new uint256[](delegateAddresses.length);
-    for (uint256 i = 0; i < delegateAddresses.length; i++) {
-      dividends[i] = minHoldingValue(delegateAddresses[i])
-        .mul(dividendPerHoldingValue)
-        .div(POINTSMULTIPLIER);
-    }
-    return dividends;
-  }
-
   function subscribeDividends() public virtual {
     require(delegates(msg.sender) == address(0), "Already subscribed"); // check if already subscribed
-    delegateAddresses.push(msg.sender);
     delegate(msg.sender); // ?
-  }
-
-  /**
-   * return how much dividend should one get per his minHoldingValue. Exagerated for factor POINTSMULTIPLIER!
-   *   In each distribution, there is a small amount of funds which does not get distributed,
-   *     which is `(msg.dividendAmount * POINTSMULTIPLIER) % totalValue()`.
-   */
-  function dividendsPerHoldingValue(uint256 dividendAmount)
-    public
-    view
-    onlyRole(RoleNames.WIZARD)
-    returns (uint256)
-  {
-    uint256 arrayLength = delegateAddresses.length;
-    uint256 totalHoldingPower = 0; // totalValue auto init to 0
-    uint256 pointsPerShare;
-
-    for (uint256 i = 0; i < arrayLength; i++) {
-      totalHoldingPower += minHoldingValue(delegateAddresses[i]);
-    }
-    require(totalHoldingPower > 0, "TOTAL HOLDING POWER IS ZERO");
-    //require(dividendAmount > 0, "NO DIVIDENDS TO DISTRIBUTE");
-
-    pointsPerShare = dividendAmount.mul(POINTSMULTIPLIER).div(
-      totalHoldingPower
-    );
-    return pointsPerShare;
   }
 
   /**
