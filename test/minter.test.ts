@@ -18,7 +18,7 @@ import {
 import { routerABI, tokenABI, UNISWAP_ROUTER, USDC, WETH } from "./constants";
 import { expect } from "chai";
 
-describe.skip("Idoru minter Contract", function () {
+describe.only("Idoru minter Contract", function () {
   let token: Idoru;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -74,6 +74,7 @@ describe.skip("Idoru minter Contract", function () {
       uniswap.FACTORY_ADDRESS,
       token.address,
       USDC,
+      ethers.constants.AddressZero,
       bank.address
     );
     await idoruMinter.deployed();
@@ -176,7 +177,7 @@ describe.skip("Idoru minter Contract", function () {
       .approve(idoruMinter.address, transferAmount.mul(100));
 
     // await idoruMinter_addr1.setUniswapFactoryAddress(uniswap.FACTORY_ADDRESS);
-    await idoruMinter_addr1.swapStableIdoru(transferAmount);
+    await idoruMinter_addr1.swapStablecoinIdoru(transferAmount, USDC);
 
     expect(await usdc.balanceOf(bank.address)).to.be.equal(transferAmount);
 

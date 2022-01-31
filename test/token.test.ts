@@ -105,7 +105,7 @@ describe("Idoru token", function () {
     const initial_balance = await token.balanceOf(owner.address);
     await token.changeMinHoldingBlocks(5);
     await token_addr1.delegate(addr1.address);
-    
+
     // initial neutral blocks
     const M = 10;
     for (let index = 0; index < M; index++) {
@@ -151,7 +151,7 @@ describe("Idoru token", function () {
     }
 
     await token.transfer(addr1.address, initial_balance.div(10));
-    
+
     const M = 10; // Neutral blocks
     for (let index = 0; index < M; index++) {
       await token.transfer(addr2.address, initial_balance.div(M).div(50));
@@ -190,7 +190,7 @@ describe("Idoru token", function () {
     }
     //LATE DELEGATION
     await token_addr1.delegate(addr1.address);
-    console.log(await token.minHoldingValue(addr1.address))
+    console.log(await token.minHoldingValue(addr1.address));
     expect(
       (await token.minHoldingValue(addr1.address)).gt(initial_balance.div(11))
     ).to.be.false; // late delegation
@@ -209,7 +209,7 @@ describe("Idoru token", function () {
     for (let index = 0; index < j; index++) {
       await token.transfer(addr3.address, initial_balance.div(j).div(50));
     }
-    
+
     await token.transfer(addr1.address, initial_balance.div(5));
     // neutral blocks
     for (let index = 0; index < j; index++) {

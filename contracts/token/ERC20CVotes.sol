@@ -20,7 +20,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   using SafeMath for uint256;
 
   address[] internal delegateAddresses;
-  uint256 internal minHoldingBlocks = 864_000;  // cca 1blocks/3s -> 1200/h -> 28800/d -> cca 864_000/M 
+  uint256 internal minHoldingBlocks = 864_000; // cca 1blocks/3s -> 1200/h -> 28800/d -> cca 864_000/M
 
   // to handle floats
   uint256 internal constant POINTSMULTIPLIER = 2**128; // optimization, see https://github.com/ethereum/EIPs/issues/1726#issuecomment-472352728
@@ -97,8 +97,7 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
    * Return min share of user in last minHoldingBlocks
    */
   function minHoldingValue(address _addr) public view returns (uint256) {
-    if (numCheckpoints(_addr) == 0)
-    {  
+    if (numCheckpoints(_addr) == 0) {
       return 0; // No checkpoints
     }
     uint256 startBlock = int256(block.number) - int256(minHoldingBlocks) > 0
@@ -106,7 +105,11 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
       : 0;
     uint256 minimum;
     minimum = getPastVotes(_addr, startBlock); // initialize min to last checkpoin
-    for (uint32 i = numCheckpoints(_addr); checkpoints(_addr, i - 1).fromBlock > startBlock; i--) {
+    for (
+      uint32 i = numCheckpoints(_addr);
+      i >= 1 && checkpoints(_addr, i - 1).fromBlock > startBlock;
+      i--
+    ) {
       minimum = uint256(Math.min(minimum, checkpoints(_addr, i - 1).votes));
     }
     return minimum;

@@ -9,10 +9,6 @@ import "../uniswap/UniswapV2Library.sol";
 
 import "../interfaces/Idoru.interface.sol";
 
-// Basically we dont need to connect to Uniswap because we will predefine the price
-// at which users can mint new token
-
-// TODO
 // add safemath and check for div or /
 
 // check the order of tokens minted - probably something to do with sortTokens() function
@@ -26,23 +22,28 @@ contract IdoruMinter is Ownable {
 
   address private uniswapFactoryAddress;
   address private idoruAddress;
-  address private idoruStablePoolAddress;
-  mapping(address => bool) private supportedStablecoins;
+  address private usdStableCoin;
+  address private usdIdoruCoin;
+
   address private bankAddress;
 
   uint256 internal rewardPoints;
   uint256 internal fixedPricePresale;
 
+  uint256 internal presaleTokensToMint;
+  uint256 internal availableTokensToMint;
+
   constructor(
     address _uniswapFactory,
     address _idoru,
     address _stablecoin,
-    address _bank
+    address _idoruStablecoin,
+    address _bank // this can be a regular safe wallet
   ) {
     uniswapFactoryAddress = _uniswapFactory;
     idoruAddress = _idoru;
-    idoruStablePoolAddress = _stablecoin;
-    supportedStablecoins[_stablecoin] = true;
+    usdStableCoin = _stablecoin;
+    usdIdoruCoin = _idoruStablecoin;
     bankAddress = _bank;
 
     rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
@@ -65,6 +66,22 @@ contract IdoruMinter is Ownable {
   // var changing function
 
   /**
+   * Change how many tokens in the presale can be minted
+   */
+  function setPresaleTokensToMint(uint256 _tokens) public onlyOwner {
+    require(_tokens > 0, "Amount less than 0");
+    presaleTokensToMint = _tokens;
+  }
+
+  /**
+   * Change how many tokens live can be minted
+   */
+  function setAvailableTokensToMint(uint256 _tokens) public onlyOwner {
+    require(_tokens > 0, "Amount less than 0");
+    availableTokensToMint = _tokens;
+  }
+
+  /**
    * Change factor for better price if minting. 
    100 point = 1% but its for multiplying so =10_000 (*=1+diff)
    */
@@ -79,15 +96,8 @@ contract IdoruMinter is Ownable {
   function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
     require(_fixedPricePresale > 0, "Negative presale price");
     fixedPricePresale =
-      (_fixedPricePresale * 1_000_000_000_000_000_000) /
-      1000_000; //1_000_000_000_000_000_000 -> IIdoru.decimals() !!
-  }
-
-  /**
-   * Replace uniswap factory address - probably unnecessary
-   */
-  function changeUniswapFactoryAddress(address _addr) public onlyOwner {
-    uniswapFactoryAddress = _addr;
+      (_fixedPricePresale * uint256(IIdoru(idoruAddress).decimals())) /
+      1000_000;
   }
 
   /**
@@ -95,20 +105,6 @@ contract IdoruMinter is Ownable {
    */
   function changeIdoruAddress(address _addr) public onlyOwner {
     idoruAddress = _addr;
-  }
-
-  /**
-   * Add stablecoin to the list of supported stablecoins
-   */
-  function addStablecoinAddress(address _addr) public onlyOwner {
-    supportedStablecoins[_addr] = true;
-  }
-
-  /**
-   * Remove stablecoin from the list of supported stablecoins
-   */
-  function removeStablecoinAddress(address _addr) public onlyOwner {
-    supportedStablecoins[_addr] = false;
   }
 
   /**
@@ -143,7 +139,7 @@ contract IdoruMinter is Ownable {
   {
     (uint256 res0, uint256 res1) = UniswapV2Library.getReserves(
       uniswapFactoryAddress,
-      idoruStablePoolAddress,
+      usdStableCoin,
       idoruAddress
     );
     require(_amountIn > 0, "Negative amount in");
@@ -151,7 +147,6 @@ contract IdoruMinter is Ownable {
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
     _amountOut = (((_amountIn * res1) / res0) * rewardPoints) / 10_000; // sol>0.8 handle overflows
-    // _amountOut = UniswapV2Library.getAmountOut(_amountIn, res0, res1); // Old version
   }
 
   /**
@@ -164,7 +159,7 @@ contract IdoruMinter is Ownable {
   {
     (uint256 res0, uint256 res1) = UniswapV2Library.getReserves(
       uniswapFactoryAddress,
-      idoruStablePoolAddress,
+      usdStableCoin,
       idoruAddress
     );
     require(_amountOut > 0, "Negative amount in");
@@ -172,7 +167,6 @@ contract IdoruMinter is Ownable {
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
     _amountIn = (((_amountOut * res0) / res1) * 10_000) / rewardPoints;
-    // _amountIn = UniswapV2Library.getAmountIn(_amountOut, res0, res1);  // Old version
   }
 
   // state changing functions
@@ -181,7 +175,6 @@ contract IdoruMinter is Ownable {
    * we can do this (if) the contract has minter permission
 
    * idk man probably this requires some safety mechanism also
-   * also I feel like IERC20 is not enough for this -> need to export type IIdoruToken
    */
   function mintIdoru(address to, uint256 amount) private {
     IIdoru(idoruAddress).mint(to, amount);
@@ -198,23 +191,65 @@ contract IdoruMinter is Ownable {
   );
 
   /**
-   * user would need to approve this contract for ERC20 stablecoins
+   * user would need to approve this two contracts for ERC20 stablecoins
 
+   * The contract accepts two tokens. First is USDC stablecoin, which is the pool
+   * second is our internal stablecoin which we will use to fund users' accounts
+   * when they send us money.
    * EMITS SwapForIdoru
    */
-  function swapStableIdoru(uint256 _stablecoinAmount) public senderVerified {
-    // console.log(IIdoru(idoruAddress).isVerified(msg.sender));
+  function swapStablecoinIdoru(uint256 _stablecoinAmount, address _stablecoin)
+    public
+    senderVerified
+  {
+    require(
+      _stablecoin == usdStableCoin || _stablecoin == usdIdoruCoin,
+      "Coin not supported"
+    );
 
-    IERC20 stableERC20 = IERC20(idoruStablePoolAddress);
-
+    IERC20 stableERC20 = IERC20(_stablecoin);
     stableERC20.transferFrom(msg.sender, bankAddress, _stablecoinAmount);
-
     uint256 idoruAmount = getIdoruAmountOut(_stablecoinAmount);
+
+    require(idoruAmount < availableTokensToMint, "Mint too many tokens");
+    availableTokensToMint -= idoruAmount;
 
     mintIdoru(msg.sender, idoruAmount);
 
     emit SwapForIdoru(
-      idoruStablePoolAddress,
+      _stablecoin,
+      idoruAddress,
+      _stablecoinAmount,
+      idoruAmount
+    );
+  }
+
+  /**
+   * Presale function for Idoru
+
+   * same function as above but at a fixed price
+   * EMITS PresaleSwapForIdoru
+   */
+  function mintIdoruPresale(uint256 _stablecoinAmount, address _stablecoin)
+    public
+    senderVerified
+  {
+    require(
+      _stablecoin == usdStableCoin || _stablecoin == usdIdoruCoin,
+      "Coin not supported"
+    );
+
+    IERC20 stableERC20 = IERC20(_stablecoin);
+    stableERC20.transferFrom(msg.sender, bankAddress, _stablecoinAmount);
+    uint256 idoruAmount = getIdoruPresaleAmountOut(_stablecoinAmount);
+
+    require(idoruAmount < presaleTokensToMint, "Mint too many tokens");
+    presaleTokensToMint -= idoruAmount;
+
+    mintIdoru(msg.sender, idoruAmount);
+
+    emit SwapForIdoru(
+      _stablecoin,
       idoruAddress,
       _stablecoinAmount,
       idoruAmount
