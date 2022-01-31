@@ -8,17 +8,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  */
 interface IIdoru is IERC20 {
   // view functions
-  function dividendsPerHoldingValue(uint256 dividendAmount)
+  function minHoldingValue(address _addr, uint256 dividendsBlock)
     external
     view
     returns (uint256);
 
-  function getDelegateAddresses() external view returns (address[] memory);
-
-  function getDelegateDividendsAmounts(uint256 dividendAmount)
+  function getPastTotalSupply(uint256 blockNumber)
     external
     view
-    returns (uint256[] memory);
+    returns (uint256);
 
   function isVerified(address _addr) external view returns (bool);
 
