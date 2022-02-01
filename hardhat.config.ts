@@ -28,7 +28,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         enabled: true,
-        url: "https://eth-mainnet.alchemyapi.io/v2/6rBSQ8yQfQmH24wC5I5eiTvpgpVfCK-4",
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        url: process.env.ALCHEMY_URL!,
         blockNumber: 13958749,
       },
     },
