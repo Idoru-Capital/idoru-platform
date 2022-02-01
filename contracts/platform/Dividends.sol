@@ -56,7 +56,7 @@ contract IdoruDividends is Context, Ownable {
     dividendsAmounts.push(amount);
     dividendsPaid.push(0);
     IERC20 stableERC20 = IERC20(_stablecoinToken);
-    stableERC20.transferFrom(bankAddress, msg.sender, amount);   // zdej tud ni ok?
+    stableERC20.transferFrom(bankAddress, address(this), amount);   // a to je ok?
 }
 
   function deleteDividends(uint256 blockDelete)
@@ -78,8 +78,7 @@ contract IdoruDividends is Context, Ownable {
     dividendsPaid[indexOfBlock] = dividendsPaid[indexOfBlock] + remaining;
     dividendsAmounts[indexOfBlock] = 0;
     IERC20 stableERC20 = IERC20(_stablecoinToken);
-    address dividendsAddress; // samo da ni errorja NI UREDU
-    stableERC20.transferFrom(dividendsAddress, msg.sender, remaining);   // zdej kokr je nevem kaj je address od tega contracta
+    stableERC20.transferFrom(address(this), msg.sender, remaining);
     // set dividendsPaid do dividendAmounts?
   }  
 
@@ -132,7 +131,6 @@ contract IdoruDividends is Context, Ownable {
     IERC20 stableERC20 = IERC20(_stablecoinToken);
     uint256 amount = withdrawAllDividendsView();
     withdrawAllDividendsChangeState();
-    address dividendsAddress; // samo da ni errorja NI UREDU
-    stableERC20.transferFrom(dividendsAddress, msg.sender, amount);   // zdej kokr je nevem kaj je address od tega contracta
+    stableERC20.transferFrom(address(this), msg.sender, amount);
 }
 }
