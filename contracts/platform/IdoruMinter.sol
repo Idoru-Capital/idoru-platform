@@ -191,7 +191,7 @@ contract IdoruMinter is Ownable {
   );
 
   /**
-   * user would need to approve this two contracts for ERC20 stablecoins
+   * user needs to approve this two contracts for ERC20 stablecoins
 
    * The contract accepts two tokens. First is USDC stablecoin, which is the pool
    * second is our internal stablecoin which we will use to fund users' accounts
