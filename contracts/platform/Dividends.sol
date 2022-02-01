@@ -30,6 +30,7 @@ contract IdoruDividends is Context, Ownable {
   // there is no way to change the token. If need to change, we need to deploy new contract.
   address private _stablecoinToken;
   address private _idoruToken;
+  address private idoruAddress;
 
   uint256[] internal dividendBlocks;
   mapping (address => uint256) internal userLatestBlock; // latest block at which user has withdrawn dividends
@@ -79,10 +80,10 @@ contract IdoruDividends is Context, Ownable {
   }  
 
   function withdrawDividendsBlock(uint256 blockWithdraw)
-    public view returns (uint256)
+    private view returns (uint256)
   {
     uint pastTotalSupply = IIdoru(idoruAddress).getPastTotalSupply(blockWithdraw);  // ?
-    uint toWithdraw = (dividendsAmounts[blockWithdraw] + dividendsPaid[blockWithdraw])*IIdoru(idoruAddress).MinHoldingValue(msg.sender, blockWithdraw)) / pastTotalSupply;
+    uint toWithdraw = (dividendsAmounts[blockWithdraw] + dividendsPaid[blockWithdraw])*IIdoru(idoruAddress).minHoldingValue(msg.sender, blockWithdraw) / pastTotalSupply;
     require(dividendsAmounts[blockWithdraw]> toWithdraw, "Not enough money");
     return toWithdraw;
     }
