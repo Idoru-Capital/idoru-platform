@@ -30,7 +30,7 @@ contract IdoruDividends is Context, Ownable {
   // there is no way to change the token. If need to change, we need to deploy new contract.
   address private _stablecoinToken;
   address private _idoruToken;
-  address private idoruAddress;
+  address private bankAddress;
 
   uint256[] internal dividendBlocks;
   mapping (address => uint256) internal userLatestBlock; // latest block at which user has withdrawn dividends
@@ -55,6 +55,8 @@ contract IdoruDividends is Context, Ownable {
     dividendBlocks.push(blockPay);
     dividendsAmounts.push(amount);
     dividendsPaid.push(0);
+    IERC20 stableERC20 = IERC20(_stablecoinToken);
+    stableERC20.transferFrom(bankAddress, msg.sender, amount);   // zdej tud ni ok?
 }
 
   function deleteDividends(uint256 blockDelete)
@@ -70,30 +72,47 @@ contract IdoruDividends is Context, Ownable {
           doesExist = true;
     }
     }
-    require(doesExist, "block not in dividendBlocks");
+    require(doesExist, "Block not in dividendBlocks");
     delete dividendBlocks[indexOfBlock];  // but now we leave gap (just set to 0)! we want this becasue indexes  in lists still coresponde to same dividends
     uint256 remaining = dividendsAmounts[indexOfBlock];
     dividendsPaid[indexOfBlock] = dividendsPaid[indexOfBlock] + remaining;
     dividendsAmounts[indexOfBlock] = 0;
-    return remaining;
-    // set dividendsPait do dividendAmounts?
+    IERC20 stableERC20 = IERC20(_stablecoinToken);
+    address dividendsAddress; // samo da ni errorja NI UREDU
+    stableERC20.transferFrom(dividendsAddress, msg.sender, remaining);   // zdej kokr je nevem kaj je address od tega contracta
+    // set dividendsPaid do dividendAmounts?
   }  
 
   function withdrawDividendsBlock(uint256 blockWithdraw)
     private view returns (uint256)
   {
-    uint pastTotalSupply = IIdoru(idoruAddress).getPastTotalSupply(blockWithdraw);  // ?
-    uint toWithdraw = (dividendsAmounts[blockWithdraw] + dividendsPaid[blockWithdraw])*IIdoru(idoruAddress).minHoldingValue(msg.sender, blockWithdraw) / pastTotalSupply;
+    uint pastTotalSupply = IIdoru(_idoruToken).getPastTotalSupply(blockWithdraw);  // ?
+    uint toWithdraw = (dividendsAmounts[blockWithdraw] + dividendsPaid[blockWithdraw])*IIdoru(_idoruToken).minHoldingValue(msg.sender, blockWithdraw) / pastTotalSupply;
     require(dividendsAmounts[blockWithdraw]> toWithdraw, "Not enough money");
     return toWithdraw;
     }
 
-
-  function withdrawAllDividends()
-    private returns (uint256)
+  function withdrawAllDividendsView()
+    public view returns (uint256)
   {
     require(dividendBlocks.length > 0, "No blocks with dividends");
     uint withdrawAmount;
+    // If user hasnt claimed didvidends yet, userLatestBlock[msg.sender] = 0
+    // if (userLatestBlock[msg.sender] == 0){ // Hasnt claimed yet
+    //   userLatestBlock[msg.sender] = dividendBlocks[0];
+    // }
+    for (uint i=dividendBlocks.length; i > 0; i--) {
+      if (dividendBlocks[i] <= userLatestBlock[msg.sender]){
+        break;
+      }
+      withdrawAmount += withdrawDividendsBlock(dividendBlocks[i]);
+    }
+    return withdrawAmount;
+}
+  function withdrawAllDividendsChangeState()
+    private returns (uint256)
+  {
+    require(dividendBlocks.length > 0, "No blocks with dividends");
     if (userLatestBlock[msg.sender] == 0){ // hasnt claimed yet
       userLatestBlock[msg.sender] = dividendBlocks[0];
     }
@@ -102,11 +121,18 @@ contract IdoruDividends is Context, Ownable {
         break;
       }
       uint amountBlock = withdrawDividendsBlock(dividendBlocks[i]);
-      withdrawAmount += amountBlock;
       dividendsPaid[i] += amountBlock;
       dividendsAmounts[i] -= amountBlock;
     }
     userLatestBlock[msg.sender] = dividendBlocks[dividendBlocks.length - 1];
-    return withdrawAmount;
+}
+  function claimDividends()
+    private returns (uint256)
+  {
+    IERC20 stableERC20 = IERC20(_stablecoinToken);
+    uint256 amount = withdrawAllDividendsView();
+    withdrawAllDividendsChangeState();
+    address dividendsAddress; // samo da ni errorja NI UREDU
+    stableERC20.transferFrom(dividendsAddress, msg.sender, amount);   // zdej kokr je nevem kaj je address od tega contracta
 }
 }
