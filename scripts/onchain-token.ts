@@ -1,54 +1,84 @@
 /**
  * Test the contracts on test chain
  */
+import { ethers as ethers_t } from "ethers";
 import { ethers } from "hardhat";
+import { TEN } from "../test/constants";
 import {
+  Idoru,
+  IdoruMinter__factory,
   // Idoru,
   Idoru__factory,
+  RoleNames,
   // RoleNames,
   // RoleNames__factory,
 } from "../typechain";
+import { mumbaiAddresses } from "./config";
 
 // import IdoruABI from "../artifacts/contracts/Idoru.sol/Idoru.json";
 
-// https://data-seed-prebsc-1-s1.binance.org:8545
-const IDORU_ADDRESS = "0xd48300a2ffd2a84334204dc43d91ef60da2d8349";
+const setPresaleLimit = async (signer: ethers_t.Signer) => {
+  const minter = new IdoruMinter__factory(signer).attach(
+    mumbaiAddresses.minterAddress
+  );
+  const token = new Idoru__factory(signer).attach(mumbaiAddresses.idoruAddress);
+
+  const tx = await minter.setPresaleTokensToMint(
+    ethers.BigNumber.from(TEN.pow((await token.decimals()) + 2))
+  );
+  console.log(tx);
+  const reciept = await tx.wait();
+  console.log(reciept);
+};
+
+const burnAll = async (token: Idoru, address: string) => {
+  console.log(await token.decimals());
+
+  await token.burn(await token.balanceOf(address));
+
+  console.log("Token address:", token.address);
+
+  console.log(await token.balanceOf(address));
+};
+
+const giveMinterPermissions = async (signer: ethers_t.Signer) => {
+  const minter = new IdoruMinter__factory(signer).attach(
+    mumbaiAddresses.minterAddress
+  );
+  const token = new Idoru__factory(signer).attach(mumbaiAddresses.idoruAddress);
+
+  const tx = await token.grantRole(
+    "0xf0887ba65ee2024ea881d91b74c2450ef19e1557f03bed3ea9f16b037cbe2dc9",
+    minter.address
+  );
+  console.log(tx);
+  const reciept = await tx.wait();
+  console.log(reciept);
+};
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  //   console.log("Deploying contracts with the account:", deployer.address);
-
-  //   console.log("Account balance:", (await deployer.getBalance()).toString());
-
-  //   const tokenFactory = new Idoru__factory(deployer);
-  //   const token = await tokenFactory.deploy();
-  //   await token.deployed();
-
-  // const token: Idoru = new Idoru(
-  //   "0xD48300A2FFD2a84334204DC43d91Ef60dA2d8349",
-  //   IdoruABI.abi
-  // );
-
-  const token = new Idoru__factory(deployer).attach(IDORU_ADDRESS);
+  const token = new Idoru__factory(deployer).attach(
+    mumbaiAddresses.idoruAddress
+  );
   console.log(await token.balanceOf(deployer.address));
 
-  // await token.delegate(deployer.address);
-  console.log(await token.numCheckpoints(deployer.address));
+  if (!(await token.isVerified(deployer.address))) {
+    console.log("User is not KYCed yet");
 
-  console.log(await token.decimals());
+    await token.subscribeDividends();
+    await token.verifyAddress(deployer.address);
 
-  // await token.burnFrom(100);
+    console.log(await token.numCheckpoints(deployer.address));
 
-  //   console.log("Token address:", token.address);
+    console.log(`User ${deployer.address} is now KYCed`);
+  }
 
-  //   const uni = new ethers.Contract(
-  //     UNISWAP,
-  //     [
-  //       "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
-  //     ],
-  //     wallet
-  //   );
+  // await setPresaleLimit(deployer);
+  await giveMinterPermissions(deployer);
+
+  // burnAll(token, deployer.address);
 }
 
 main()

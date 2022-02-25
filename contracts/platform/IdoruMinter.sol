@@ -116,6 +116,14 @@ contract IdoruMinter is Ownable {
 
   // View functions
 
+  function getPresaleTokensToMint() public view returns (uint256) {
+    return presaleTokensToMint;
+  }
+
+  function getAvailableTokensToMint() public view returns (uint256) {
+    return availableTokensToMint;
+  }
+
   /**
    * amount in is should be in stablecoins (UDSC)
    */
