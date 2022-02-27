@@ -4,5 +4,6 @@ export const mumbaiAddresses = {
   WMATICAddress: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
   idoruStableAddress: "0x25143D37A590f11e9B552497fa3a85c278fe74FF",
   bankAddress: "0x7CEba73a42916077C30FBBc7cB82A1fb3A48d173",
-  minterAddress: "0xf2e531E92e01852C5e2AaB9070E028CecA92906f",
+  // minterAddress: "0xf2e531E92e01852C5e2AaB9070E028CecA92906f",
+  presaleMinterAddress: "0x4923957A6422708c3Fe64676328021689b135320",
 };

@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Verifiable.sol";
 import "./Constants.sol";
 import "./ERC20CVotes.sol";
+import "./ERC20Presale.sol";
 
 // no need for it
 // import "./Idoru.interface.sol";
@@ -22,7 +23,8 @@ contract Idoru is
   Pausable,
   ERC20Permit,
   ERC20CVotes,
-  ERC20Verifiable
+  ERC20Verifiable,
+  ERC20Presale
 {
   constructor() ERC20("Idoru", "IDORU") ERC20Permit("Idoru") {
     // Let's just give owner all the roles
@@ -49,7 +51,7 @@ contract Idoru is
     address from,
     address to,
     uint256 amount
-  ) internal override whenNotPaused {
+  ) internal override whenNotPaused presaleProtection(from) {
     super._beforeTokenTransfer(from, to, amount);
   }
 

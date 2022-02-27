@@ -12,6 +12,7 @@ import {
   IdoruMinter__factory,
   // IdoruStableCoin,
   IdoruStableCoin__factory,
+  PresaleMinter__factory,
 } from "../typechain";
 import { mumbaiAddresses } from "./config";
 
@@ -38,17 +39,15 @@ async function main() {
 
   // console.log("IdoruStableCoin address:", idoruStable.address);
 
-  // const minterFactory = new IdoruMinter__factory(deployer);
-  // const minter = await minterFactory.deploy(
-  //   uniswapV3Address,
-  //   idoruAddress,
-  //   WMATICAddress,
-  //   idoruStableAddress,
-  //   bankAddress
-  // );
-  // await minter.deployed();
-
-  // console.log("Minter address:", minter.address);
+  const presaleMinterFactory = new PresaleMinter__factory(deployer);
+  const presaleMinter = await presaleMinterFactory.deploy(
+    mumbaiAddresses.idoruAddress,
+    mumbaiAddresses.WMATICAddress,
+    mumbaiAddresses.idoruStableAddress,
+    mumbaiAddresses.bankAddress
+  );
+  await presaleMinter.deployed();
+  console.log("Presale minter address:", presaleMinter.address);
 
   // const uni = new ethers.Contract(
   //   UNISWAP,

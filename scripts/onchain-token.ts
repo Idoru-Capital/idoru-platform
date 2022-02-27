@@ -6,7 +6,8 @@ import { ethers } from "hardhat";
 import { TEN } from "../test/constants";
 import {
   Idoru,
-  IdoruMinter__factory,
+  // IdoruMinter__factory,
+  PresaleMinter__factory,
   // Idoru,
   Idoru__factory,
   RoleNames,
@@ -18,8 +19,8 @@ import { mumbaiAddresses } from "./config";
 // import IdoruABI from "../artifacts/contracts/Idoru.sol/Idoru.json";
 
 const setPresaleLimit = async (signer: ethers_t.Signer) => {
-  const minter = new IdoruMinter__factory(signer).attach(
-    mumbaiAddresses.minterAddress
+  const minter = new PresaleMinter__factory(signer).attach(
+    mumbaiAddresses.presaleMinterAddress
   );
   const token = new Idoru__factory(signer).attach(mumbaiAddresses.idoruAddress);
 
@@ -42,8 +43,8 @@ const burnAll = async (token: Idoru, address: string) => {
 };
 
 const giveMinterPermissions = async (signer: ethers_t.Signer) => {
-  const minter = new IdoruMinter__factory(signer).attach(
-    mumbaiAddresses.minterAddress
+  const minter = new PresaleMinter__factory(signer).attach(
+    mumbaiAddresses.presaleMinterAddress
   );
   const token = new Idoru__factory(signer).attach(mumbaiAddresses.idoruAddress);
 
@@ -75,7 +76,7 @@ async function main() {
     console.log(`User ${deployer.address} is now KYCed`);
   }
 
-  // await setPresaleLimit(deployer);
+  await setPresaleLimit(deployer);
   await giveMinterPermissions(deployer);
 
   // burnAll(token, deployer.address);

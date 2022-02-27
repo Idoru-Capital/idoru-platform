@@ -5,7 +5,7 @@
     "compile": "hardhat compile",
     "test": "hardhat test --network hardhat",
     "deploy": "npx hardhat run scripts/deploy.ts --network mumbai",
-    "test:onchain": "hardhat run scripts/onchain-token.ts --network mumbai",
+    "onchain": "hardhat run scripts/onchain-token.ts --network mumbai",
     "cli": "ts-node cli/index.ts"
   },
   "devDependencies": {

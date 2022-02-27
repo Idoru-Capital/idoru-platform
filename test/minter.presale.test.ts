@@ -188,7 +188,7 @@ describe.only("Idoru minter Contract", function () {
     await presaleMinter.setPresaleTokensToMint(
       ethers.BigNumber.from(10).pow(6 + (await token.decimals())) // we can mint 1 million tokens
     );
-    // await token.pause();
+
     await presaleMinter_1.mintIdoruPresale(
       transferAmount,
       idoruStablecoin.address
