@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract IdoruStableCoin is ERC20, ERC20Burnable, Pausable, Ownable {
-  constructor() ERC20("IdoruStableCoin", "IDOR_USD") {}
+  constructor() ERC20("IDORU Stablecoin", "IDRStable") {}
 
   function pause() public onlyOwner {
     _pause();

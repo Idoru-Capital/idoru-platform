@@ -136,7 +136,7 @@ describe.only("Idoru minter Contract", function () {
     await idoruMinter.setPresaleTokensToMint(
       ethers.BigNumber.from(10).pow(6 + (await idoruStablecoin.decimals())) // we can mint 1 million tokens
     );
-
+    // await token.pause();
     await idoruMinter_1.mintIdoruPresale(
       transferAmount,
       idoruStablecoin.address

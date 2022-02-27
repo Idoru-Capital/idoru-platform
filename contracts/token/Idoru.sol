@@ -30,7 +30,7 @@ contract Idoru is
     _grantRole(RoleNames.WIZARD, msg.sender);
     _grantRole(RoleNames.PAUSER, msg.sender);
     _grantRole(RoleNames.MINTER, msg.sender);
-    _mint(msg.sender, 25_000_000 * 10**decimals());
+    // _mint(msg.sender, 25_000_000 * 10**decimals());
   }
 
   function pause() public onlyRole(RoleNames.PAUSER) {
