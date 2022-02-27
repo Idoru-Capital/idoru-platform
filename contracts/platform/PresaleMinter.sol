@@ -18,14 +18,14 @@ contract PresaleMinter is Ownable {
 
   using SafeMath for uint256;
 
-  address private idoruAddress;
-  address private usdStableCoin;
-  address private usdIdoruCoin;
-  address private bankAddress;
+  address public idoruAddress;
+  address public usdStableCoin;
+  address public usdIdoruCoin;
+  address public bankAddress;
 
-  uint256 internal fixedPricePresale;
+  uint256 public fixedPricePresale;
 
-  uint256 internal presaleTokensToMint;
+  uint256 public presaleTokensToMint;
 
   constructor(
     address _idoru,
@@ -49,6 +49,17 @@ contract PresaleMinter is Ownable {
     _;
   }
 
+  /**
+   * Modifier to check if stablecoin is supported
+   */
+  modifier stablecoinSupported(address _stablecoin) {
+    require(
+      _stablecoin == usdStableCoin || _stablecoin == usdIdoruCoin,
+      "Token not supported"
+    );
+    _;
+  }
+
   // var changing function
 
   /**
@@ -68,39 +79,19 @@ contract PresaleMinter is Ownable {
   }
 
   /**
-   * Change Idoru token address
-   */
-  function changeIdoruAddress(address _addr) public onlyOwner {
-    idoruAddress = _addr;
-  }
-
-  /**
-   * Change Bank address
-   */
-  function changeBankAddress(address _addr) public onlyOwner {
-    bankAddress = _addr;
-  }
-
-  // View functions
-
-  function getPresaleTokensToMint() public view returns (uint256) {
-    return presaleTokensToMint;
-  }
-
-  /**
    * amount in is should be in stablecoins (UDSC)
    */
-  function getIdoruPresaleAmountOut(uint256 _amountIn)
+  function getIdoruPresaleAmountOut(uint256 _amountIn, address _stablecoin)
     public
     view
+    stablecoinSupported(_stablecoin)
     returns (uint256 _amountOut)
   {
     require(_amountIn > 0, "Amount in less or equal 0");
     require(fixedPricePresale > 0, "Price less or equal 0");
     _amountOut =
-      (_amountIn * (10**uint256(IIdoru(idoruAddress).decimals())) * 1_000_000) /
-      (fixedPricePresale *
-        (10**uint256(IStableERC20(usdStableCoin).decimals())));
+      (_amountIn * (10**(IIdoru(idoruAddress).decimals())) * 1_000_000) /
+      (fixedPricePresale * (10**(IStableERC20(_stablecoin).decimals())));
   }
 
   // state changing functions
@@ -115,7 +106,7 @@ contract PresaleMinter is Ownable {
   /**
    * Event that gets triggered on every mint of Idoru tokens
    */
-  event SwapForIdoru(
+  event MintedIdoru(
     address indexed _stablecoin,
     address indexed _idoru,
     uint256 _amountIn,
@@ -137,26 +128,20 @@ contract PresaleMinter is Ownable {
   function mintIdoruPresale(uint256 _stablecoinAmount, address _stablecoin)
     public
     senderVerified
+    stablecoinSupported(_stablecoin)
   {
-    require(
-      _stablecoin == usdStableCoin || _stablecoin == usdIdoruCoin,
-      "Token not supported"
-    );
-
     IERC20 stableERC20 = IERC20(_stablecoin);
     stableERC20.transferFrom(msg.sender, bankAddress, _stablecoinAmount);
-    uint256 idoruAmount = getIdoruPresaleAmountOut(_stablecoinAmount);
+    uint256 idoruAmount = getIdoruPresaleAmountOut(
+      _stablecoinAmount,
+      _stablecoin
+    );
 
     require(idoruAmount < presaleTokensToMint, "Mint too many tokens");
     presaleTokensToMint -= idoruAmount;
 
     mintIdoru(msg.sender, idoruAmount);
 
-    emit SwapForIdoru(
-      _stablecoin,
-      idoruAddress,
-      _stablecoinAmount,
-      idoruAmount
-    );
+    emit MintedIdoru(_stablecoin, idoruAddress, _stablecoinAmount, idoruAmount);
   }
 }
