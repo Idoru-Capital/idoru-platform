@@ -130,7 +130,7 @@ contract IdoruMinter is Ownable {
   {
     require(_amountIn > 0, "Amount in less or equal 0");
     require(fixedPricePresale > 0, "Price less or equal 0");
-    _amountOut = _amountIn * (10**uint256(IIdoru(idoruAddress).decimals())) * 1_000_000 / (fixedPricePresale * (10**uint256(IIdoru(usdStableCoin)).decimals()));
+    _amountOut = _amountIn * (10**uint256(IIdoru(idoruAddress).decimals())) * 1_000_000 / (fixedPricePresale * (10**uint256(IIdoru(usdStableCoin).decimals())));
   }
 
   /**
