@@ -47,9 +47,7 @@ contract IdoruMinter is Ownable {
     bankAddress = _bank;
 
     rewardPoints = 10_100; // 100 point = 1% BUT! *=100% (for multiplying) *=1+diff_perc
-    fixedPricePresale =
-      (1_000_000 * uint256(IIdoru(idoruAddress).decimals())) /
-      1_000_000; // price = 1000_000* token/ dollar (so higher price means less valuable token)
+    fixedPricePresale = 1_000_000;  // price = 1_000_000 * dollar/token (so higher price means more valuable token)
   }
 
   /**
@@ -69,7 +67,7 @@ contract IdoruMinter is Ownable {
    * Change how many tokens in the presale can be minted
    */
   function setPresaleTokensToMint(uint256 _tokens) public onlyOwner {
-    require(_tokens > 0, "Amount less than 0");
+    require(_tokens > 0, "Amount less or equal 0");
     presaleTokensToMint = _tokens;
   }
 
@@ -77,13 +75,13 @@ contract IdoruMinter is Ownable {
    * Change how many tokens live can be minted
    */
   function setAvailableTokensToMint(uint256 _tokens) public onlyOwner {
-    require(_tokens > 0, "Amount less than 0");
+    require(_tokens > 0, "Amount less or equal 0");
     availableTokensToMint = _tokens;
   }
 
   /**
    * Change factor for better price if minting. 
-   100 point = 1% but its for multiplying so =10_000 (*=1+diff)
+   100 point = 1% but its for multiplying so = 10_000 (*=1+diff)
    */
   function changerewardPoints(uint256 _rewardPoints) public onlyOwner {
     require(rewardPoints > 10_000, "Negative reward");
@@ -91,13 +89,11 @@ contract IdoruMinter is Ownable {
   }
 
   /**
-   * Change fixed price in presale. price = 1000_000* dollar/token. Higher price means more valuable token)
+   * Change fixed price in presale. price = 1_000_000 * dollar/token (so higher price means more valuable token). Given price should be for factor 1_000_000 higher!
    */
   function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
-    require(_fixedPricePresale > 0, "Negative presale price");
-    fixedPricePresale =
-      (_fixedPricePresale * uint256(IIdoru(idoruAddress).decimals())) /
-      1000_000;
+    require(_fixedPricePresale > 0, "Presale price less or equal 0");
+    fixedPricePresale = _fixedPricePresale;
   }
 
   /**
@@ -132,9 +128,9 @@ contract IdoruMinter is Ownable {
     view
     returns (uint256 _amountOut)
   {
-    require(_amountIn > 0, "Negative amount in");
-    require(fixedPricePresale > 0, "Negative fixed price");
-    _amountOut = (_amountIn * fixedPricePresale) / 1_000_000;
+    require(_amountIn > 0, "Amount in less or equal 0");
+    require(fixedPricePresale > 0, "Price less or equal 0");
+    _amountOut = _amountIn * (10**uint256(IIdoru(idoruAddress).decimals())) * 1_000_000 / (fixedPricePresale * (10**uint256(IIdoru(usdStableCoin)).decimals()));
   }
 
   /**
@@ -150,7 +146,7 @@ contract IdoruMinter is Ownable {
       usdStableCoin,
       idoruAddress
     );
-    require(_amountIn > 0, "Negative amount in");
+    require(_amountIn > 0, "Amount in less or equal 0");
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
@@ -170,7 +166,7 @@ contract IdoruMinter is Ownable {
       usdStableCoin,
       idoruAddress
     );
-    require(_amountOut > 0, "Negative amount in");
+    require(_amountOut > 0, "Amount in less or equal 0");
     require(rewardPoints > 10_000, "Negative reward");
     require(res0 > 0, "Negative pool");
     require(res1 > 0, "Negative pool");
