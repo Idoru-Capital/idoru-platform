@@ -60,6 +60,10 @@ contract PresaleMinter is Ownable {
     _;
   }
 
+  // EVENTS
+  event TokensToMintSet(uint256 _tokensToMint);
+  event PresalePriceChanged(uint256 _newPrice);
+
   // var changing function
 
   /**
@@ -68,6 +72,8 @@ contract PresaleMinter is Ownable {
   function setPresaleTokensToMint(uint256 _tokens) public onlyOwner {
     require(_tokens > 0, "Amount less or equal 0");
     presaleTokensToMint = _tokens;
+
+    emit TokensToMintSet(_tokens);
   }
 
   /**
@@ -77,6 +83,8 @@ contract PresaleMinter is Ownable {
   function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
     require(_fixedPricePresale > 0, "Presale price less or equal 0");
     fixedPricePresale = _fixedPricePresale;
+
+    emit PresalePriceChanged(_fixedPricePresale);
   }
 
   /**
