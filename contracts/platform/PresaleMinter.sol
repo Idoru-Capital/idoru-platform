@@ -15,16 +15,13 @@ import "../interfaces/StableERC20.interface.sol";
 
 contract PresaleMinter is Ownable {
   // variables
-
   using SafeMath for uint256;
 
   address public idoruAddress;
   address public usdStableCoin;
   address public usdIdoruCoin;
   address public bankAddress;
-
   uint256 public fixedPricePresale;
-
   uint256 public presaleTokensToMint;
 
   constructor(
