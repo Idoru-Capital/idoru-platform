@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./Constants.sol";
 
 /**
@@ -13,7 +13,7 @@ import "./Constants.sol";
  * this exact functionality could be added also added with role system
  * but this is more flexible, and we can see who is verified
  */
-abstract contract ERC20Verifiable is AccessControl {
+abstract contract ERC20Verifiable is AccessControlEnumerable {
   event Verified(address indexed _verified);
 
   mapping(address => bool) private verified;

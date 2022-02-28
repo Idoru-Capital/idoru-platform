@@ -71,7 +71,8 @@ contract PresaleMinter is Ownable {
   }
 
   /**
-   * Change fixed price in presale. price = 1_000_000 * dollar/token (so higher price means more valuable token). Given price should be for factor 1_000_000 higher!
+   * Change fixed price in presale. price is in 1e-6 dollar/token -> so 1_000_000 is 1 USDC per 1 token
+   * 500_000 is 50 cents per 1 token
    */
   function changePricePresale(uint256 _fixedPricePresale) public onlyOwner {
     require(_fixedPricePresale > 0, "Presale price less or equal 0");

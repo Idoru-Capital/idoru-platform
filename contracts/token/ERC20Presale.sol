@@ -6,10 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
 import "./Constants.sol";
 
-contract ERC20Presale is AccessControl {
+contract ERC20Presale is AccessControlEnumerable {
   bool public presaleEnded;
 
   function endPresale() public onlyRole(RoleNames.WIZARD) {

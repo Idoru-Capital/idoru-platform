@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 import "./Constants.sol";
 
@@ -16,11 +16,15 @@ import "./Constants.sol";
  * whether user has held the token for long enough
  */
 
-abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
+abstract contract ERC20CVotes is
+  AccessControlEnumerable,
+  ERC20Permit,
+  ERC20Votes
+{
   using SafeMath for uint256;
 
   uint256 internal minHoldingBlocks = 864_000; // cca 1blocks/3s -> 1200/h -> 28800/d -> cca 864_000/M
-  
+
   //specs at https://handsomely-mango-150.notion.site/Dividends-091a454635414f8aabc80e967de65fd6
   // uint256 internal constant POINTSMULTIPLIER = 2**128; // optimization, see https://github.com/ethereum/EIPs/issues/1726#issuecomment-472352728
 
@@ -35,10 +39,15 @@ abstract contract ERC20CVotes is AccessControl, ERC20Permit, ERC20Votes {
   function subscribeDividends() public virtual {
     delegate(msg.sender); // ?
   }
+
   /**
    * Return min share of user in last minHoldingBlocks
    */
-  function minHoldingValue(address _addr, uint256 dividendsBlock) public view returns (uint256) {
+  function minHoldingValue(address _addr, uint256 dividendsBlock)
+    public
+    view
+    returns (uint256)
+  {
     if (numCheckpoints(_addr) == 0) {
       return 0; // No checkpoints
     }

@@ -368,4 +368,25 @@ describe("Idoru token", function () {
     await token_addr2.subscribeDividends();
     await token_addr2.delegate(addr2.address);
   });
+
+  /**
+   * Test accesControlEnumerable port
+   *? this was recommended by the auditors
+   */
+  it.only("AccessControlEnumerabl test", async function () {
+    const minter_name = await ROLES_NAMES.MINTER();
+    // const wizard_name = await ROLES_NAMES.WIZARD();
+
+    expect((await token.getRoleMemberCount(minter_name)).eq(1)).to.be.true;
+    // console.log(
+    //   await token.getRoleMemberCount(minter_name),
+    //   "minters on chain currently"
+    // );
+    await token.grantRole(minter_name, addr1.address);
+    expect((await token.getRoleMemberCount(minter_name)).eq(2)).to.be.true;
+
+    // for (let index = 0; index < 2; index++) {
+    //   console.log(await token.getRoleMember(minter_name, index));
+    // }
+  });
 });
