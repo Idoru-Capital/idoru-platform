@@ -25,9 +25,6 @@ abstract contract ERC20CVotes is
 
   uint256 internal minHoldingBlocks = 864_000; // cca 1blocks/3s -> 1200/h -> 28800/d -> cca 864_000/M
 
-  //specs at https://handsomely-mango-150.notion.site/Dividends-091a454635414f8aabc80e967de65fd6
-  // uint256 internal constant POINTSMULTIPLIER = 2**128; // optimization, see https://github.com/ethereum/EIPs/issues/1726#issuecomment-472352728
-
   function changeMinHoldingBlocks(uint256 _minHoldingBlocks)
     public
     onlyRole(RoleNames.WIZARD)

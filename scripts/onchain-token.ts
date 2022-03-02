@@ -11,6 +11,7 @@ import {
   // Idoru,
   Idoru__factory,
   RoleNames,
+  IdoruStableCoin__factory,
   // RoleNames,
   // RoleNames__factory,
 } from "../typechain";
@@ -57,6 +58,26 @@ const giveMinterPermissions = async (signer: ethers_t.Signer) => {
   console.log(reciept);
 };
 
+const verifyUserAddBalance = async (
+  signer: ethers_t.Signer,
+  address: string
+) => {
+  const token = new Idoru__factory(signer).attach(mumbaiAddresses.idoruAddress);
+  const stablecoin = new IdoruStableCoin__factory(signer).attach(
+    mumbaiAddresses.idoruStableAddress
+  );
+
+  const tx = await token.verifyAddress(address);
+
+  const tx1 = await stablecoin.mint(
+    address,
+    TEN.pow(2 + (await stablecoin.decimals()))
+  );
+
+  await Promise.all([tx.wait(), tx1.wait()]);
+  console.log("User address:", address, "added");
+};
+
 async function main() {
   const [deployer] = await ethers.getSigners();
 
@@ -64,6 +85,8 @@ async function main() {
     mumbaiAddresses.idoruAddress
   );
   console.log(await token.balanceOf(deployer.address));
+
+  // await token.verifyAddress("0x7CEba73a42916077C30FBBc7cB82A1fb3A48d173");
 
   if (!(await token.isVerified(deployer.address))) {
     console.log("User is not KYCed yet");
@@ -76,8 +99,13 @@ async function main() {
     console.log(`User ${deployer.address} is now KYCed`);
   }
 
-  await setPresaleLimit(deployer);
-  await giveMinterPermissions(deployer);
+  // await setPresaleLimit(deployer);
+  // await giveMinterPermissions(deployer);
+
+  // await verifyUserAddBalance(
+  //   deployer,
+  //   "0x7f7B1CD0fCf2aDdFF3459dbE1cA42be23c089036"
+  // );
 
   // burnAll(token, deployer.address);
 }

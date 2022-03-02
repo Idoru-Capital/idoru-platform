@@ -28,6 +28,7 @@ async function main() {
   // const tokenFactory = new Idoru__factory(deployer);
   // const token = await tokenFactory.deploy();
   // await token.deployed();
+  // console.log("Token deployed on", token.address);
 
   // const token = new Idoru("0xD48300A2FFD2a84334204DC43d91Ef60dA2d8349");
 
@@ -48,14 +49,6 @@ async function main() {
   );
   await presaleMinter.deployed();
   console.log("Presale minter address:", presaleMinter.address);
-
-  // const uni = new ethers.Contract(
-  //   UNISWAP,
-  //   [
-  //     "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
-  //   ],
-  //   wallet
-  // );
 }
 
 main()
