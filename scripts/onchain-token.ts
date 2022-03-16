@@ -99,12 +99,12 @@ async function main() {
     console.log(`User ${deployer.address} is now KYCed`);
   }
 
-  // await setPresaleLimit(deployer);
+  await setPresaleLimit(deployer);
   // await giveMinterPermissions(deployer);
 
   // await verifyUserAddBalance(
   //   deployer,
-  //   "0x7f7B1CD0fCf2aDdFF3459dbE1cA42be23c089036"
+  //   "0x7CEba73a42916077C30FBBc7cB82A1fb3A48d173"
   // );
 
   // burnAll(token, deployer.address);
